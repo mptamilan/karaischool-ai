@@ -27,19 +27,27 @@ export function createServer() {
   const sessionDbPath =
     process.env.SESSION_DB_PATH ||
     path.join(process.cwd(), "data", "sessions.sqlite3");
+
+  // split into name and dir for connect-sqlite3
+  const sessionDbName = path.basename(sessionDbPath);
+  const sessionDbDir = path.dirname(sessionDbPath);
+
+  // trust proxy when behind a proxy (Render) so secure cookies are set correctly
+  if (process.env.TRUST_PROXY !== "false") {
+    app.set("trust proxy", 1);
+  }
+
+  const isProd = process.env.NODE_ENV === "production";
   app.use(
     session({
-      store: new SQLiteStore({
-        db: sessionDbPath,
-        dir: path.dirname(sessionDbPath),
-      }),
+      store: new SQLiteStore({ db: sessionDbName, dir: sessionDbDir }),
       secret: process.env.SESSION_SECRET || "dev-secret",
       resave: false,
       saveUninitialized: false,
       cookie: {
         maxAge: 1000 * 60 * 60 * 24 * 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
+        secure: isProd,
+        sameSite: isProd ? "none" : "lax",
       },
     }),
   );
