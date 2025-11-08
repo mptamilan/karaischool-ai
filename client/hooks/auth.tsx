@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const apiBase = (import.meta as any).env.VITE_API_BASE_URL || "";
+  const apiBase = (import.meta as any).env.VITE_AUTH_API_URL || ""; // if empty, same-origin
 
   const handleCredential = useCallback(async (credential: string) => {
     // Send id_token to backend to create a session
