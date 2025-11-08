@@ -106,34 +106,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const apiBase = (import.meta as any).env.VITE_AUTH_API_URL || ""; // if empty, same-origin
 
-  const handleCredential = useCallback(async (credential: string) => {
-    // Send id_token to backend to create a session
-    try {
-      const res = await fetch(`${apiBase}/api/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ id_token: credential }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data?.error || "Login failed");
-        return;
+  const handleCredential = useCallback(
+    async (credential: string) => {
+      // Send id_token to backend to create a session
+      try {
+        const res = await fetch(`${apiBase}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ id_token: credential }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data?.error || "Login failed");
+          return;
+        }
+        if (data?.user) {
+          setUser(data.user);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
+          } catch {}
+        }
+      } catch (e: any) {
+        console.error("handleCredential error", e);
+        setError("Login failed");
       }
-      if (data?.user) {
-        setUser(data.user);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user)); } catch {}
-      }
-    } catch (e: any) {
-      console.error("handleCredential error", e);
-      setError("Login failed");
-    }
-  }, [apiBase]);
+    },
+    [apiBase],
+  );
 
   useEffect(() => {
     let mounted = true;
     async function init() {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
+        | string
+        | undefined;
       if (!clientId) {
         setError("Missing VITE_GOOGLE_CLIENT_ID");
         setInitialized(true);
@@ -148,18 +155,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
         if (!initializedRef.current) {
-          g.accounts.id.initialize({ client_id: clientId, callback: (resp: any) => { if (resp?.credential) handleCredential(resp.credential); } });
+          g.accounts.id.initialize({
+            client_id: clientId,
+            callback: (resp: any) => {
+              if (resp?.credential) handleCredential(resp.credential);
+            },
+          });
           initializedRef.current = true;
         }
 
         // try restore session via backend
         try {
-          const me = await fetch(`${apiBase || ""}/api/auth/me`, { credentials: "include" });
+          const me = await fetch(`${apiBase || ""}/api/auth/me`, {
+            credentials: "include",
+          });
           if (me.ok) {
             const j = await me.json();
             if (mounted && j?.user) {
               setUser(j.user);
-              try { localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user)); } catch {}
+              try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
+              } catch {}
             }
           }
         } catch (err) {
@@ -174,7 +190,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
     init();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [handleCredential, apiBase]);
 
   const signIn = useCallback(() => {
@@ -193,14 +211,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = useCallback(async () => {
     try {
-      await fetch(`${apiBase}/api/auth/logout`, { method: "POST", credentials: "include" });
+      await fetch(`${apiBase}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (e) {
       // ignore
     }
     setUser(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
     const g = (window as any).google;
-    try { g?.accounts?.id?.cancel && g.accounts.id.cancel(); } catch {}
+    try {
+      g?.accounts?.id?.cancel && g.accounts.id.cancel();
+    } catch {}
   }, [apiBase]);
 
   const value = useMemo(
