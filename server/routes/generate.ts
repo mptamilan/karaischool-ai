@@ -14,7 +14,8 @@ export const handleGenerate: RequestHandler = async (req, res) => {
   try {
     // Require authenticated session
     const userId = (req.session as any)?.userId;
-    if (!userId) return res.status(401).json({ error: "Authentication required" });
+    if (!userId)
+      return res.status(401).json({ error: "Authentication required" });
 
     const day = getUtcDayKey();
     const key = `${userId}:${day}`;
@@ -24,16 +25,25 @@ export const handleGenerate: RequestHandler = async (req, res) => {
       current.count = 0;
     }
     if (current.count >= MAX_PER_DAY) {
-      return res.status(429).json({ error: `Daily limit of ${MAX_PER_DAY} requests reached. Try again tomorrow (UTC).` });
+      return res
+        .status(429)
+        .json({
+          error: `Daily limit of ${MAX_PER_DAY} requests reached. Try again tomorrow (UTC).`,
+        });
     }
 
     const body = req.body as GenerateRequest;
     if (!body || typeof body.prompt !== "string" || !body.prompt.trim()) {
-      return res.status(400).json({ error: "Invalid request: 'prompt' is required." });
+      return res
+        .status(400)
+        .json({ error: "Invalid request: 'prompt' is required." });
     }
 
     // Proxy to external AI server (your Render-hosted Gemini service)
-    const target = process.env.SCHOOLAI_API_URL || process.env.VITE_AI_API_URL || "https://schoolai-server.onrender.com";
+    const target =
+      process.env.SCHOOLAI_API_URL ||
+      process.env.VITE_AI_API_URL ||
+      "https://schoolai-server.onrender.com";
     const url = `${target.replace(/\/$/, "")}/api/generate`;
 
     const resp = await fetch(url, {
@@ -45,7 +55,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     if (!resp.ok) {
       const text = await resp.text();
       console.error("External AI error:", resp.status, text);
-      return res.status(502).json({ error: "AI service error. Please try again later." });
+      return res
+        .status(502)
+        .json({ error: "AI service error. Please try again later." });
     }
 
     const data = await resp.json();
@@ -56,8 +68,13 @@ export const handleGenerate: RequestHandler = async (req, res) => {
 
     // Normalize response shape - forward if already includes text, usage, timestamp
     const payload: GenerateResponse = {
-      text: (data && (data.text || data.answer || JSON.stringify(data))) || "(No content)",
-      usage: data.usage || { remaining: Math.max(0, MAX_PER_DAY - current.count), limit: MAX_PER_DAY },
+      text:
+        (data && (data.text || data.answer || JSON.stringify(data))) ||
+        "(No content)",
+      usage: data.usage || {
+        remaining: Math.max(0, MAX_PER_DAY - current.count),
+        limit: MAX_PER_DAY,
+      },
       timestamp: data.timestamp || new Date().toISOString(),
     };
 
