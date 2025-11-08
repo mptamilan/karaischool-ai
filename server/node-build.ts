@@ -46,14 +46,16 @@ process.on("uncaughtException", (err) => {
 
 // Start server and catch startup errors
 try {
-  app.listen(port, () => {
-    console.log(`🚀 Fusion Starter server running on port ${port}`);
-    console.log(`📱 Frontend: http://localhost:${port}`);
-    console.log(`🔧 API: http://localhost:${port}/api`);
-  }).on('error', (err: any) => {
-    console.error('Server failed to start:', err);
-    process.exit(1);
-  });
+  app
+    .listen(port, () => {
+      console.log(`🚀 Fusion Starter server running on port ${port}`);
+      console.log(`📱 Frontend: http://localhost:${port}`);
+      console.log(`🔧 API: http://localhost:${port}/api`);
+    })
+    .on("error", (err: any) => {
+      console.error("Server failed to start:", err);
+      process.exit(1);
+    });
 } catch (err) {
   console.error("Failed to start server:", err);
   process.exit(1);
