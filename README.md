@@ -6,9 +6,11 @@ A complete educational AI tutor website built with React + TypeScript + Vite, Ta
 
 - Frontend: React + TypeScript + Vite + TailwindCSS
 - Icons: lucide-react
-- Backend: Express.js (Render)
-- AI: Google Gemini 2.0 Flash Exp API
-- Deployment: Netlify (frontend) + Render (backend)
+- Backend: External Express.js API hosted on Render (or your choice)
+- AI: Google Gemini 2.0 Flash Exp API (use your Render backend)
+- Deployment: Netlify (frontend) + Render (backend) — or use only Render for both
+
+Note: This repository previously included an embedded Express server for development. You indicated you have an external API at https://schoolai-server.onrender.com; the app is now configured to use that external API by default in the Tutor page. The local Express middleware has been removed from the Vite dev server to avoid conflicts.
 
 ## Quick Start (Local)
 
