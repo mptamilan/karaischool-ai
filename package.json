@@ -21,10 +21,13 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "connect-sqlite3": "^0.9.16",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "express-session": "^1.18.2",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "sqlite3": "^5.1.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
