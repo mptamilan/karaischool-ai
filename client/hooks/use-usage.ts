@@ -4,7 +4,7 @@ const MAX = 20;
 
 function todayKey(email: string | null) {
   const d = new Date().toISOString().slice(0, 10);
-  return `usage:${email ?? 'anon'}:${d}`;
+  return `usage:${email ?? "anon"}:${d}`;
 }
 
 export function useDailyUsage(email: string | null) {
@@ -29,7 +29,7 @@ export function useDailyUsage(email: string | null) {
 
   const resetIfNewDay = useCallback(() => {
     // Clean up older keys to avoid stale counts
-    const prefix = `usage:${email ?? 'anon'}:`;
+    const prefix = `usage:${email ?? "anon"}:`;
     Object.keys(localStorage)
       .filter((k) => k.startsWith(prefix) && k !== todayKey(email))
       .forEach((k) => localStorage.removeItem(k));
@@ -39,5 +39,14 @@ export function useDailyUsage(email: string | null) {
     resetIfNewDay();
   }, [resetIfNewDay]);
 
-  return useMemo(() => ({ count, remaining: Math.max(0, MAX - count), limit: MAX, increment, reload: load }), [count, load]);
+  return useMemo(
+    () => ({
+      count,
+      remaining: Math.max(0, MAX - count),
+      limit: MAX,
+      increment,
+      reload: load,
+    }),
+    [count, load],
+  );
 }

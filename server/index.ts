@@ -8,7 +8,8 @@ export function createServer() {
   const app = express();
 
   // CORS
-  const allowedOrigin = process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL;
+  const allowedOrigin =
+    process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL;
   app.use(
     cors({
       origin: allowedOrigin ? [allowedOrigin] : true,
