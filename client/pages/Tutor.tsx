@@ -65,6 +65,7 @@ export default function TutorPage() {
       const resp = await fetch(`${apiBase}/api/generate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ prompt: text }),
       });
       const data = (await resp.json()) as GenerateResponse;
