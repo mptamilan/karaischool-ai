@@ -41,7 +41,7 @@ export default function TutorPage() {
     [loading, input, usage.remaining, user],
   );
 
-  const apiBase = (import.meta as any).env.VITE_API_BASE_URL || "";
+  const apiBase = (import.meta as any).env.VITE_API_BASE_URL || "https://schoolai-server.onrender.com";
 
   const send = async (text: string) => {
     if (!user) {
