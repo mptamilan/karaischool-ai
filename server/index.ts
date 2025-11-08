@@ -13,7 +13,8 @@ export function createServer() {
   const app = express();
 
   // CORS
-  const allowedOrigin = process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL || "*";
+  const allowedOrigin =
+    process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL || "*";
   app.use(
     cors({
       origin: allowedOrigin === "*" ? true : [allowedOrigin],
@@ -23,10 +24,15 @@ export function createServer() {
 
   // Session store
   const SQLiteStore = SQLiteStoreInit(session as any);
-  const sessionDbPath = process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "sessions.sqlite3");
+  const sessionDbPath =
+    process.env.SESSION_DB_PATH ||
+    path.join(process.cwd(), "data", "sessions.sqlite3");
   app.use(
     session({
-      store: new SQLiteStore({ db: sessionDbPath, dir: path.dirname(sessionDbPath) }),
+      store: new SQLiteStore({
+        db: sessionDbPath,
+        dir: path.dirname(sessionDbPath),
+      }),
       secret: process.env.SESSION_SECRET || "dev-secret",
       resave: false,
       saveUninitialized: false,

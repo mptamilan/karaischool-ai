@@ -1,7 +1,8 @@
 import path from "path";
 import Database from "sqlite3";
 
-const dbFile = process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "app.db");
+const dbFile =
+  process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "app.db");
 
 // Ensure folder exists
 import fs from "fs";
@@ -23,23 +24,41 @@ db.serialize(() => {
   )`);
 });
 
-export function findOrCreateUserFromGoogle(info: { sub: string; name?: string; email?: string; picture?: string }) {
+export function findOrCreateUserFromGoogle(info: {
+  sub: string;
+  name?: string;
+  email?: string;
+  picture?: string;
+}) {
   return new Promise<any>((resolve, reject) => {
-    db.get("SELECT * FROM users WHERE google_sub = ?", [info.sub], (err, row) => {
-      if (err) return reject(err);
-      if (row) return resolve(row);
-      db.run(
-        `INSERT INTO users (google_sub, name, email, picture) VALUES (?,?,?,?)`,
-        [info.sub, info.name || null, info.email || null, info.picture || null],
-        function (e) {
-          if (e) return reject(e);
-          db.get("SELECT * FROM users WHERE id = ?", [this.lastID], (err2, newRow) => {
-            if (err2) return reject(err2);
-            resolve(newRow);
-          });
-        },
-      );
-    });
+    db.get(
+      "SELECT * FROM users WHERE google_sub = ?",
+      [info.sub],
+      (err, row) => {
+        if (err) return reject(err);
+        if (row) return resolve(row);
+        db.run(
+          `INSERT INTO users (google_sub, name, email, picture) VALUES (?,?,?,?)`,
+          [
+            info.sub,
+            info.name || null,
+            info.email || null,
+            info.picture || null,
+          ],
+          function (e) {
+            if (e) return reject(e);
+            db.get(
+              "SELECT * FROM users WHERE id = ?",
+              [this.lastID],
+              (err2, newRow) => {
+                if (err2) return reject(err2);
+                resolve(newRow);
+              },
+            );
+          },
+        );
+      },
+    );
   });
 }
 

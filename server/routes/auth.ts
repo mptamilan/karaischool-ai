@@ -17,19 +17,32 @@ export const handleLogin: RequestHandler = async (req, res) => {
     }
     const info = await r.json();
     // info contains: aud, sub, email, name, picture, exp, iat
-    const expectedAud = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID;
+    const expectedAud =
+      process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID;
     if (expectedAud && info.aud !== expectedAud) {
       console.warn("token audience mismatch", info.aud, expectedAud);
       // don't fail hard, but warn
     }
 
     // Create or find user in sqlite
-    const user = await findOrCreateUserFromGoogle({ sub: info.sub, name: info.name, email: info.email, picture: info.picture });
+    const user = await findOrCreateUserFromGoogle({
+      sub: info.sub,
+      name: info.name,
+      email: info.email,
+      picture: info.picture,
+    });
 
     // Create session
     (req.session as any).userId = user.id;
 
-    res.json({ user: { id: user.id, name: user.name, email: user.email, picture: user.picture } });
+    res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        picture: user.picture,
+      },
+    });
   } catch (err) {
     console.error("/api/auth/login error", err);
     res.status(500).json({ error: "Server error" });
