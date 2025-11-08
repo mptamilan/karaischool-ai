@@ -1,6 +1,5 @@
 import type { RequestHandler } from "express";
-import fetch from "node-fetch";
-import { findOrCreateUserFromGoogle, getUserById } from "@/db/sqlite";
+import { findOrCreateUserFromGoogle, getUserById } from "../db/sqlite";
 
 // POST /api/auth/login { id_token }
 export const handleLogin: RequestHandler = async (req, res) => {
