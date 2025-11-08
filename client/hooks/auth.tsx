@@ -38,10 +38,14 @@ const STORAGE_KEY = "ghss-karaiai-user";
 
 function loadGoogleSdk(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if ((window as any).google && (window as any).google.accounts && (window as any).google.accounts.id) {
+    if (
+      (window as any).google &&
+      (window as any).google.accounts &&
+      (window as any).google.accounts.id
+    ) {
       return resolve();
     }
-    const existing = document.querySelector('script[data-google-id]');
+    const existing = document.querySelector("script[data-google-id]");
     if (existing) {
       const g = (window as any).google;
       if (g && g.accounts && g.accounts.id) return resolve();
@@ -53,13 +57,21 @@ function loadGoogleSdk(): Promise<void> {
     script.setAttribute("data-google-id", "1");
     script.onload = () => {
       setTimeout(() => {
-        if ((window as any).google && (window as any).google.accounts && (window as any).google.accounts.id) {
+        if (
+          (window as any).google &&
+          (window as any).google.accounts &&
+          (window as any).google.accounts.id
+        ) {
           resolve();
         } else {
           let attempts = 0;
           const id = setInterval(() => {
             attempts++;
-            if ((window as any).google && (window as any).google.accounts && (window as any).google.accounts.id) {
+            if (
+              (window as any).google &&
+              (window as any).google.accounts &&
+              (window as any).google.accounts.id
+            ) {
               clearInterval(id);
               resolve();
             } else if (attempts > 10) {
@@ -98,15 +110,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setError("Failed to decode Google credential");
       return;
     }
-    const u: AuthUser = { name: data.name, email: data.email, picture: data.picture };
+    const u: AuthUser = {
+      name: data.name,
+      email: data.email,
+      picture: data.picture,
+    };
     setUser(u);
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(u)); } catch {}
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(u));
+    } catch {}
   }, []);
 
   useEffect(() => {
     let mounted = true;
     async function init() {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
+        | string
+        | undefined;
       if (!clientId) {
         setError("Missing VITE_GOOGLE_CLIENT_ID");
         setInitialized(true);
@@ -121,7 +141,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           return;
         }
         if (!initializedRef.current) {
-          g.accounts.id.initialize({ client_id: clientId, callback: (resp: any) => { if (resp?.credential) handleCredential(resp.credential); } });
+          g.accounts.id.initialize({
+            client_id: clientId,
+            callback: (resp: any) => {
+              if (resp?.credential) handleCredential(resp.credential);
+            },
+          });
           initializedRef.current = true;
         }
         if (mounted) setInitialized(true);
@@ -132,7 +157,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     }
     init();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [handleCredential]);
 
   const signIn = useCallback(() => {
@@ -151,12 +178,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signOut = useCallback(() => {
     setUser(null);
-    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
     const g = (window as any).google;
-    try { g?.accounts?.id?.cancel && g.accounts.id.cancel(); } catch {}
+    try {
+      g?.accounts?.id?.cancel && g.accounts.id.cancel();
+    } catch {}
   }, []);
 
-  const value = useMemo(() => ({ user, initialized, error, signIn, signOut }), [user, initialized, error, signIn, signOut]);
+  const value = useMemo(
+    () => ({ user, initialized, error, signIn, signOut }),
+    [user, initialized, error, signIn, signOut],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
