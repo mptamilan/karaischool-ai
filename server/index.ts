@@ -70,6 +70,9 @@ export function createServer() {
   // Dev-only login helper (creates a JWT and sets cookie) for testing
   if (process.env.NODE_ENV !== "production") {
     app.post("/api/auth/devlogin", handleDevLogin as any);
+    // Dev-only debug route
+    const { handleAuthDebug } = require("./routes/auth");
+    app.get("/api/auth/debug", handleAuthDebug as any);
   }
 
   // AI generate endpoint
