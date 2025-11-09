@@ -21,7 +21,7 @@ const examples = [
 ];
 
 export default function TutorPage() {
-  const { user, signIn } = useAuth();
+  const { user, signIn, token } = useAuth();
   const usage = useDailyUsage(user?.email ?? null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -72,9 +72,11 @@ export default function TutorPage() {
     setLoading(true);
     setError(null);
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
       const resp = await fetch(`${apiBase}/api/generate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "include",
         body: JSON.stringify({ prompt: text }),
       });
