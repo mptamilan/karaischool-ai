@@ -47,7 +47,13 @@ export const handleLogin: RequestHandler = async (req, res) => {
 // POST /api/auth/logout
 export const handleLogout: RequestHandler = async (req, res) => {
   const isProd = process.env.NODE_ENV === "production";
-  res.cookie("ghss_token", "", { maxAge: 0, path: "/", httpOnly: true, secure: isProd, sameSite: isProd ? "none" : "lax" });
+  res.cookie("ghss_token", "", {
+    maxAge: 0,
+    path: "/",
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? "none" : "lax",
+  });
   res.json({ ok: true });
 };
 
@@ -59,7 +65,14 @@ export const handleMe: RequestHandler = async (req, res) => {
     const secret = process.env.SESSION_SECRET || "dev-secret";
     try {
       const payload = jwt.verify(token, secret) as any;
-      return res.json({ user: { sub: payload.sub, name: payload.name, email: payload.email, picture: payload.picture } });
+      return res.json({
+        user: {
+          sub: payload.sub,
+          name: payload.name,
+          email: payload.email,
+          picture: payload.picture,
+        },
+      });
     } catch (e) {
       return res.status(200).json({ user: null });
     }

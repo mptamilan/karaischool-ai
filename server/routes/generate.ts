@@ -18,7 +18,8 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     const authHeader = (req.headers["authorization"] as string) || "";
     let token = req.cookies?.ghss_token as string | undefined;
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
-    if (!token) return res.status(401).json({ error: "Authentication required" });
+    if (!token)
+      return res.status(401).json({ error: "Authentication required" });
     const secret = process.env.SESSION_SECRET || "dev-secret";
     let payload: any = null;
     try {
@@ -36,11 +37,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
       current.count = 0;
     }
     if (current.count >= MAX_PER_DAY) {
-      return res
-        .status(429)
-        .json({
-          error: `Daily limit of ${MAX_PER_DAY} requests reached. Try again tomorrow (UTC).`,
-        });
+      return res.status(429).json({
+        error: `Daily limit of ${MAX_PER_DAY} requests reached. Try again tomorrow (UTC).`,
+      });
     }
 
     const body = req.body as GenerateRequest;
