@@ -277,22 +277,87 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const signIn = useCallback(() => {
     const g = (window as any).google;
-    if (!initializedRef.current || !g?.accounts?.id) {
-      setError("Google SDK not ready. Please refresh the page.");
-      return;
+    // Prefer Google Identity Services prompt if available
+    if (initializedRef.current && g?.accounts?.id) {
+      try {
+        setAuthLoading(true);
+        g.accounts.id.prompt();
+        setTimeout(() => setAuthLoading(false), 6000);
+        return;
+      } catch (e: any) {
+        console.warn("GSI prompt failed, falling back to popup", e);
+      }
     }
-    try {
-      setAuthLoading(true);
-      // Prompt will eventually call our callback which clears authLoading
-      g.accounts.id.prompt();
-      // Fallback: clear loading after 6s to avoid stuck UI
-      setTimeout(() => setAuthLoading(false), 6000);
-    } catch (e: any) {
-      console.error("Sign in failed", e);
-      setError("Sign in failed. Try again later.");
-      setAuthLoading(false);
-    }
-  }, []);
+
+    // Fallback: open OAuth popup to obtain id_token and postMessage it back
+    (async () => {
+      try {
+        setAuthLoading(true);
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+        if (!clientId) {
+          setError("Missing VITE_GOOGLE_CLIENT_ID");
+          setAuthLoading(false);
+          return;
+        }
+        const redirectUri = `${window.location.origin}/auth/google-callback`;
+        const scope = encodeURIComponent("openid email profile");
+        const nonce = Math.random().toString(36).slice(2);
+        const state = Math.random().toString(36).slice(2);
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${encodeURIComponent(
+          clientId,
+        )}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=${scope}&nonce=${encodeURIComponent(
+          nonce,
+        )}&prompt=select_account&state=${encodeURIComponent(state)}`;
+
+        const w = window.open(url, "ghss_google_auth", "width=500,height=700");
+        if (!w) {
+          setError("Popup blocked. Please allow popups and try again.");
+          setAuthLoading(false);
+          return;
+        }
+
+        const listener = (e: MessageEvent) => {
+          if (!e.data) return;
+          const data = e.data as any;
+          if (data?.type === "ghss_google_credential" && data?.credential) {
+            try {
+              handleCredential(data.credential);
+            } finally {
+              setAuthLoading(false);
+            }
+          }
+        };
+
+        window.addEventListener("message", listener, false);
+
+        // Failsafe timeout
+        const to = setTimeout(() => {
+          try {
+            window.removeEventListener("message", listener as any);
+          } catch {}
+          setAuthLoading(false);
+          setError("Login timed out. Please try again.");
+          try {
+            w.close();
+          } catch {}
+        }, 120000);
+
+        // Poll for window close to cleanup
+        const poll = setInterval(() => {
+          if (w.closed) {
+            clearInterval(poll);
+            clearTimeout(to);
+            window.removeEventListener("message", listener as any);
+            setAuthLoading(false);
+          }
+        }, 500);
+      } catch (e) {
+        console.error("Popup sign-in error", e);
+        setError("Sign in failed. Try again later.");
+        setAuthLoading(false);
+      }
+    })();
+  }, [handleCredential]);
 
   const signOut = useCallback(async () => {
     setSignOutLoading(true);
