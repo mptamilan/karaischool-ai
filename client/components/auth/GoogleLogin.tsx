@@ -24,7 +24,11 @@ export default function GoogleLogin() {
   return (
     <div className="flex items-center gap-2">
       <div ref={containerRef} aria-hidden={true} />
-      <button onClick={() => signIn()} className="btn-secondary" disabled={!!authLoading}>
+      <button
+        onClick={() => signIn()}
+        className="btn-secondary"
+        disabled={!!authLoading}
+      >
         {authLoading ? (
           <>
             <LoadingDots />
