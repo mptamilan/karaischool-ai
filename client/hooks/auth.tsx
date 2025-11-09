@@ -283,6 +283,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       g?.accounts?.id?.disableAutoSelect && g.accounts.id.disableAutoSelect();
       g?.accounts?.id?.cancel && g.accounts.id.cancel();
     } catch {}
+    toast({ title: "Signed out", description: "You are now signed out" });
     setSignOutLoading(false);
   }, [apiBase]);
 
