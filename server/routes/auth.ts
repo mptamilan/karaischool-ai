@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
     const idToken = req.body?.id_token;
+    console.debug("/api/auth/login called, id_token present:", !!idToken);
     if (!idToken) return res.status(400).json({ error: "id_token required" });
 
     // Verify token with Google tokeninfo
@@ -13,9 +14,10 @@ export const handleLogin: RequestHandler = async (req, res) => {
     if (!r.ok) {
       const text = await r.text();
       console.error("tokeninfo error:", r.status, text);
-      return res.status(401).json({ error: "Invalid ID token" });
+      return res.status(401).json({ error: "Invalid ID token", details: text });
     }
     const info = await r.json();
+    console.debug("tokeninfo result:", { iss: info.iss, aud: info.aud, sub: info.sub, email: info.email });
 
     const payload = {
       sub: info.sub,
@@ -41,6 +43,22 @@ export const handleLogin: RequestHandler = async (req, res) => {
     res.json({ user: payload, token });
   } catch (err) {
     console.error("/api/auth/login error", err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+// Dev-only debug route to inspect cookies/headers (useful for mobile debugging)
+export const handleAuthDebug: RequestHandler = async (req, res) => {
+  if (process.env.NODE_ENV === "production") {
+    return res.status(404).json({ error: "Not found" });
+  }
+  try {
+    return res.json({
+      cookies: req.cookies || {},
+      headers: req.headers,
+    });
+  } catch (e) {
+    console.error("/api/auth/debug error", e);
     res.status(500).json({ error: "Server error" });
   }
 };
