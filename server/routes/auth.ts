@@ -61,7 +61,10 @@ export const handleLogout: RequestHandler = async (req, res) => {
 // GET /api/auth/me
 export const handleMe: RequestHandler = async (req, res) => {
   try {
-    const token = req.cookies?.ghss_token;
+    // Accept token from cookie or Authorization header
+    let token = req.cookies?.ghss_token as string | undefined;
+    const authHeader = (req.headers["authorization"] as string) || "";
+    if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token) return res.status(200).json({ user: null });
     const secret = process.env.SESSION_SECRET || "dev-secret";
     try {
