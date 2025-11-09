@@ -17,13 +17,22 @@ function getUtcDayKey() {
 // Initialize Gemini AI
 let genAI: GoogleGenerativeAI | null = null;
 
-function getGeminiClient() {
+async function getGeminiClient() {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {
     throw new Error("GOOGLE_GEMINI_API_KEY not configured");
   }
   if (!genAI) {
-    genAI = new GoogleGenerativeAI(apiKey);
+    if (!genAIAvailable) throw new Error("Gemini client not available");
+    try {
+      const mod = await import("@google/generative-ai");
+      const GoogleGenerativeAI = mod.GoogleGenerativeAI || (mod as any).default;
+      genAI = new GoogleGenerativeAI(apiKey);
+    } catch (e) {
+      genAIAvailable = false;
+      console.error("Failed to load @google/generative-ai:", e);
+      throw new Error("Gemini client unavailable (module missing)");
+    }
   }
   return genAI;
 }
