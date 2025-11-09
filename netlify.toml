@@ -1,10 +1,10 @@
 [build]
-  command = "npm run build:client"
+  command = "npm run build"
   functions = "netlify/functions"
   publish = "dist/spa"
 
 [functions]
-  external_node_modules = ["express", "sqlite3", "connect-sqlite3", "jsonwebtoken", "cookie-parser"]
+  external_node_modules = ["express", "sqlite3", "connect-sqlite3", "jsonwebtoken", "cookie-parser", "serverless-http"]
   node_bundler = "esbuild"
 
 # Proxy /api/* to Netlify function named "api"
