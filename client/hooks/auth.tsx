@@ -16,8 +16,11 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
+  token?: string | null;
   initialized: boolean;
   error: string | null;
+  authLoading?: boolean;
+  signOutLoading?: boolean;
   signIn: () => void;
   signOut: () => void;
 }
