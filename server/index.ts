@@ -33,6 +33,7 @@ export function createServer() {
   );
 
   // Auth
+  app.get("/api/auth/login", handleLogin);
   app.post("/api/auth/login", handleLogin);
   app.get("/api/auth/me", handleMe);
   app.post("/api/auth/logout", handleLogout);
