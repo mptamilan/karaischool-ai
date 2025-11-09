@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import type { GenerateRequest, GenerateResponse } from "@shared/api";
+import jwt from "jsonwebtoken";
 
 // In-memory rate limiting per user/day (not persistent)
 const rateMap = new Map<string, { day: string; count: number }>();
@@ -12,11 +13,18 @@ function getUtcDayKey() {
 
 export const handleGenerate: RequestHandler = async (req, res) => {
   try {
-    // Require authenticated session
-    const userId = (req.session as any)?.userId;
-    if (!userId)
-      return res.status(401).json({ error: "Authentication required" });
+    // Require authenticated JWT
+    const token = req.cookies?.ghss_token;
+    if (!token) return res.status(401).json({ error: "Authentication required" });
+    const secret = process.env.SESSION_SECRET || "dev-secret";
+    let payload: any = null;
+    try {
+      payload = jwt.verify(token, secret) as any;
+    } catch (e) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
 
+    const userId = payload?.sub || payload?.email || "anon";
     const day = getUtcDayKey();
     const key = `${userId}:${day}`;
     const current = rateMap.get(key) || { day, count: 0 };
