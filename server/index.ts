@@ -75,6 +75,10 @@ export function createServer() {
     app.get("/api/auth/debug", handleAuthDebug as any);
   }
 
+  // OAuth routes (authorization code flow)
+  app.get("/api/auth/oauth", require("./routes/auth").handleOauthStart as any);
+  app.get("/api/auth/callback", require("./routes/auth").handleOauthCallback as any);
+
   // AI generate endpoint
   app.post("/api/generate", handleGenerate);
 
