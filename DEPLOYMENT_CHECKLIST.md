@@ -15,7 +15,7 @@ Use this checklist before pushing to GitHub and deploying to Netlify.
 ### 2. Environment Variables Ready
 - [ ] Generated `SESSION_SECRET` (run: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
 - [ ] Have `VITE_GOOGLE_CLIENT_ID` from Google Cloud Console
-- [ ] Know your AI backend URL (or using default: https://schoolai-server.onrender.com)
+- [ ] Have `GOOGLE_GEMINI_API_KEY` from Google AI Studio
 
 ### 3. Code Changes
 - [ ] All fixes from `FIXES_APPLIED.md` are in place
@@ -84,10 +84,10 @@ Add these variables one by one:
 - Check that Google OAuth consent screen is configured
 
 ### AI Generation Fails
-- Verify `SCHOOLAI_API_URL` environment variable
-- Check that external AI service is running
+- Verify `GOOGLE_GEMINI_API_KEY` environment variable is set in Netlify
+- Check Gemini API quota in Google Cloud Console
 - View Netlify function logs: **Functions** → **api** → **Function log**
-- Test AI backend directly with curl/Postman
+- Check function timeout settings (should be 26s in netlify.toml)
 
 ### "Authentication required" Error
 - Verify `SESSION_SECRET` is set in Netlify
@@ -109,7 +109,7 @@ Add these variables one by one:
 ### Monitor Usage
 - Check Netlify analytics for traffic
 - Monitor function execution time and errors
-- Track API usage on your AI backend
+- Track Gemini API usage in Google Cloud Console
 
 ### Performance
 - Netlify functions have 10-26s timeout
@@ -121,8 +121,8 @@ Add these variables one by one:
 - ✅ Never commit `.env` to Git
 - ✅ Rotate `SESSION_SECRET` periodically
 - ✅ Keep Google OAuth credentials secure
+- ✅ Keep Gemini API key secure
 - ✅ Monitor for unusual API usage
-- ✅ Set up rate limiting on AI backend as well
 
 ## 🎉 Success Criteria
 
@@ -198,7 +198,7 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id_here
 
 # Backend
 SESSION_SECRET=generate_a_random_32plus_character_string
-SCHOOLAI_API_URL=https://schoolai-server.onrender.com
+GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
 NODE_ENV=development
 MAX_DAILY_REQUESTS=20
 ```

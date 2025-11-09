@@ -71,9 +71,9 @@ See `FIXES_APPLIED.md` for complete list of 8 fixes applied.
 
 ## User Preferences
 - Package manager: pnpm
-- Deployment target: Netlify
-- Auth provider: Google OAuth
-- AI service: External (Gemini via Render)
+- Deployment target: Netlify (single deployment, no separate backend)
+- Auth provider: Google OAuth with JWT cookies
+- AI service: Direct Gemini integration via @google/generative-ai SDK
 
 ## Development Commands
 ```bash

@@ -131,9 +131,9 @@ command = "npm install && npm run build"
 **Issue**: `/api/generate` returns 502 or timeout errors
 
 **Solutions**:
-1. Verify `SCHOOLAI_API_URL` points to your working AI backend
-2. Check that your external AI service is running
-3. Verify the external service accepts requests with `{ prompt, userId }` format
+1. Verify `GOOGLE_GEMINI_API_KEY` is set correctly in Netlify
+2. Check Gemini API quota and rate limits in Google Cloud Console
+3. Verify Netlify function timeout is set to 26 seconds (already in netlify.toml)
 4. Check Netlify function logs for detailed error messages
 
 ### API Routes Return 404
@@ -165,7 +165,7 @@ command = "npm install && npm run build"
    ```env
    VITE_GOOGLE_CLIENT_ID=your_client_id_here
    SESSION_SECRET=your_secret_here
-   SCHOOLAI_API_URL=https://schoolai-server.onrender.com
+   GOOGLE_GEMINI_API_KEY=your_gemini_key_here
    NODE_ENV=development
    ```
 
