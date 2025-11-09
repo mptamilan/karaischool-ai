@@ -4,7 +4,7 @@
   publish = "dist/spa"
 
 [functions]
-  external_node_modules = ["express", "sqlite3", "connect-sqlite3"]
+  external_node_modules = ["express", "sqlite3", "connect-sqlite3", "jsonwebtoken", "cookie-parser"]
   node_bundler = "esbuild"
 
 # Proxy /api/* to Netlify function named "api"
