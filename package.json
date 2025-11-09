@@ -5,6 +5,7 @@
   "engines": {
     "node": "20.x"
   },
+  "packageManager": "pnpm@10.20.0",
   "scripts": {
     "dev": "tsx server/dev-server.ts",
     "build": "vite build",
