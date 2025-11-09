@@ -5,10 +5,10 @@ import path from "path";
 const port = process.env.PORT || 8080;
 const app = createServer();
 
-app.use(express.static("dist/spa"));
+app.use(express.static("dist"));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.resolve("dist/spa/index.html"));
+app.use((req, res) => {
+  res.sendFile(path.resolve("dist/index.html"));
 });
 
 app.listen(port, () => {
