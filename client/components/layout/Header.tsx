@@ -93,7 +93,11 @@ export default function Header() {
                   <div className="text-slate-500 text-xs">{user.email}</div>
                 </div>
               </div>
-              <button onClick={signOut} className="btn-primary" disabled={!!signOutLoading}>
+              <button
+                onClick={signOut}
+                className="btn-primary"
+                disabled={!!signOutLoading}
+              >
                 {signOutLoading ? (
                   <>
                     <LoadingDots />
@@ -110,7 +114,11 @@ export default function Header() {
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <button onClick={signIn} className="btn-secondary" disabled={!!authLoading}>
+                <button
+                  onClick={signIn}
+                  className="btn-secondary"
+                  disabled={!!authLoading}
+                >
                   {authLoading ? (
                     <>
                       <LoadingDots />

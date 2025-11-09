@@ -59,7 +59,10 @@ export default function TutorPage() {
       signIn();
       try {
         const { toast } = await import("@/hooks/use-toast");
-        toast({ title: "Sign in required", description: "Please sign in with Google to use the AI tutor." });
+        toast({
+          title: "Sign in required",
+          description: "Please sign in with Google to use the AI tutor.",
+        });
       } catch {}
       return;
     }
@@ -77,7 +80,9 @@ export default function TutorPage() {
     setLoading(true);
     setError(null);
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
       if (token) headers["Authorization"] = `Bearer ${token}`;
       const resp = await fetch(`${apiBase}/api/generate`, {
         method: "POST",

@@ -145,7 +145,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await res.json();
         if (!res.ok) {
           setError(data?.error || "Login failed");
-          toast({ title: "Login failed", description: data?.error || "Unable to sign in" });
+          toast({
+            title: "Login failed",
+            description: data?.error || "Unable to sign in",
+          });
           setAuthLoading(false);
           return;
         }
@@ -165,11 +168,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         try {
           (window as any).google?.accounts?.id?.disableAutoSelect?.();
         } catch {}
-        toast({ title: "Signed in", description: `Welcome ${data?.user?.name || ""}` });
+        toast({
+          title: "Signed in",
+          description: `Welcome ${data?.user?.name || ""}`,
+        });
       } catch (e: any) {
         console.error("handleCredential error", e);
         setError("Login failed");
-        toast({ title: "Login error", description: "Unexpected error during sign in" });
+        toast({
+          title: "Login error",
+          description: "Unexpected error during sign in",
+        });
       } finally {
         setAuthLoading(false);
       }
@@ -288,8 +297,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [apiBase]);
 
   const value = useMemo(
-    () => ({ user, token, initialized, error, authLoading, signOutLoading, signIn, signOut }),
-    [user, token, initialized, error, authLoading, signOutLoading, signIn, signOut],
+    () => ({
+      user,
+      token,
+      initialized,
+      error,
+      authLoading,
+      signOutLoading,
+      signIn,
+      signOut,
+    }),
+    [
+      user,
+      token,
+      initialized,
+      error,
+      authLoading,
+      signOutLoading,
+      signIn,
+      signOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
