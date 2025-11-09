@@ -51,14 +51,19 @@ export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
                   className="h-8 w-8 rounded-full"
                 />
               )}
-              <div>
+              <div className="flex-1">
                 <div className="text-sm font-semibold">{user.name}</div>
                 <div className="text-xs text-slate-500">{user.email}</div>
               </div>
+              <div>
+                <button onClick={() => signOut()} className="btn-ghost text-xs" disabled={!!signOutLoading}>
+                  {signOutLoading ? "Signing out..." : "Logout"}
+                </button>
+              </div>
             </div>
           ) : (
-            <button onClick={signIn} className="btn-primary w-full">
-              Sign in with Google
+            <button onClick={signIn} className="btn-primary w-full" disabled={!!authLoading}>
+              {authLoading ? "Signing in..." : "Sign in with Google"}
             </button>
           )}
         </div>
