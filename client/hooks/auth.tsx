@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export interface AuthUser {
   name: string;
