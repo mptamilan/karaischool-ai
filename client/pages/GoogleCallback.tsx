@@ -18,16 +18,24 @@ export default function GoogleCallback() {
       const h = parseHash(window.location.hash || "");
       const idToken = q.get("id_token") || h["id_token"] || null;
       if (window.opener && idToken) {
-        window.opener.postMessage({ type: "ghss_google_credential", credential: idToken }, window.location.origin);
+        window.opener.postMessage(
+          { type: "ghss_google_credential", credential: idToken },
+          window.location.origin,
+        );
         // close after short delay
         setTimeout(() => window.close(), 300);
       } else {
         // If no opener (direct visit), just show minimal UI
-        document.body.innerText = idToken ? "Sign-in successful. You can close this window." : "No credential found.";
+        document.body.innerText = idToken
+          ? "Sign-in successful. You can close this window."
+          : "No credential found.";
       }
     } catch (e) {
       try {
-        window.opener?.postMessage({ type: "ghss_google_credential", credential: null }, window.location.origin);
+        window.opener?.postMessage(
+          { type: "ghss_google_credential", credential: null },
+          window.location.origin,
+        );
       } catch {}
     }
   }, []);

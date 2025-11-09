@@ -132,29 +132,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   })();
 
   // Helper function to try configured API base with fallback to same-origin
-  const fetchWithFallback = useCallback(async (input: string, init?: RequestInit) => {
-    const urls: string[] = [];
-    if (/^https?:\/\//i.test(input)) {
-      urls.push(input);
-      try {
-        // also try relative path on same origin
-        const rel = input.replace(/^https?:\/\/[^/]+/i, "");
-        if (rel) urls.push(rel);
-      } catch {}
-    } else {
-      urls.push(input);
-    }
-    for (const u of urls) {
-      try {
-        const r = await fetch(u, init);
-        if (r.status !== 404) return r;
-      } catch (e) {
-        // ignore and try next
+  const fetchWithFallback = useCallback(
+    async (input: string, init?: RequestInit) => {
+      const urls: string[] = [];
+      if (/^https?:\/\//i.test(input)) {
+        urls.push(input);
+        try {
+          // also try relative path on same origin
+          const rel = input.replace(/^https?:\/\/[^/]+/i, "");
+          if (rel) urls.push(rel);
+        } catch {}
+      } else {
+        urls.push(input);
       }
-    }
-    // final attempt
-    return fetch(input, init);
-  }, []);
+      for (const u of urls) {
+        try {
+          const r = await fetch(u, init);
+          if (r.status !== 404) return r;
+        } catch (e) {
+          // ignore and try next
+        }
+      }
+      // final attempt
+      return fetch(input, init);
+    },
+    [],
+  );
 
   const handleCredential = useCallback(
     async (credential: string) => {
@@ -293,7 +296,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     (async () => {
       try {
         setAuthLoading(true);
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
+          | string
+          | undefined;
         if (!clientId) {
           setError("Missing VITE_GOOGLE_CLIENT_ID");
           setAuthLoading(false);
