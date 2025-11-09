@@ -4,12 +4,13 @@ import jwt from "jsonwebtoken";
 // POST /api/auth/login { id_token }
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
-    const idToken = req.body?.id_token;
-    console.debug("/api/auth/login called, id_token present:", !!idToken);
-    if (!idToken) return res.status(400).json({ error: "id_token required" });
+    // Accept either { id_token } or Google's direct POST field { credential }
+  const idToken = req.body?.id_token || req.body?.credential || req.body?.idToken;
+  console.debug("/api/auth/login called, id_token present:", !!idToken);
+  if (!idToken) return res.status(400).json({ error: "id_token required" });
 
-    // Verify token with Google tokeninfo
-    const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+  // Verify token with Google tokeninfo
+  const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
     const r = await fetch(url);
     if (!r.ok) {
       const text = await r.text();
