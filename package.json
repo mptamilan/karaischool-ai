@@ -20,6 +20,9 @@
     "format.fix": "prettier --write .",
     "typecheck": "tsc"
   },
+  "engines": {
+    "pnpm": "10.14.0"
+  },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "connect-sqlite3": "^0.9.16",
