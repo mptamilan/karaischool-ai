@@ -10,7 +10,7 @@
   ],
   "routes": [
     { "src": "/api/(?<path>.*)", "dest": "/api/$path" },
-    { "src": "^/auth/google-callback$", "dest": "/auth/google-callback" },
-    { "src": "(.*)", "dest": "/index.html" }
+    { "handle": "filesystem" },
+    { "src": "/.*", "dest": "/index.html" }
   ]
 }
