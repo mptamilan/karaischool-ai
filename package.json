@@ -10,8 +10,7 @@
     "build": "vite build",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
-    "typecheck": "tsc",
-    "postinstall": "node vercel-build-sqlite.cjs"
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
