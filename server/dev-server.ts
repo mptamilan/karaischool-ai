@@ -9,7 +9,7 @@ async function startDevServer() {
     server: { 
       middlewareMode: true,
       hmr: {
-        port: port as number,
+        port: Number(port),
       },
      },
     appType: "spa",

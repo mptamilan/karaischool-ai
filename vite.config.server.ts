@@ -10,7 +10,7 @@ export default defineConfig({
       fileName: "server",
       formats: ["es"],
     },
-    outDir: "dist",
+    outDir: "dist/server",
     target: "node18",
     ssr: true,
     rollupOptions: {

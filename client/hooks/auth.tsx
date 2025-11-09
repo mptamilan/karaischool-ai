@@ -4,7 +4,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react";
 import { toast } from "@/hooks/use-toast";
@@ -17,11 +16,8 @@ export interface AuthUser {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  token?: string | null;
   initialized: boolean;
   error: string | null;
-  authLoading?: boolean;
-  signOutLoading?: boolean;
   signIn: () => void;
   signOut: () => void;
 }
@@ -32,97 +28,31 @@ const STORAGE_KEY = "ghss-karaiai-user";
 
 function loadGoogleSdk(): Promise<void> {
   return new Promise((resolve, reject) => {
-    if (
-      (window as any).google &&
-      (window as any).google.accounts &&
-      (window as any).google.accounts.id
-    ) {
+    if ((window as any).google?.accounts?.id) {
       return resolve();
-    }
-    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
-    if (existing) {
-      const g = (window as any).google;
-      if (g && g.accounts && g.accounts.id) return resolve();
     }
     const script = document.createElement("script");
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.onload = () => {
-      setTimeout(() => {
-        if (
-          (window as any).google &&
-          (window as any).google.accounts &&
-          (window as any).google.accounts.id
-        ) {
-          resolve();
-        } else {
-          let attempts = 0;
-          const id = setInterval(() => {
-            attempts++;
-            if (
-              (window as any).google &&
-              (window as any).google.accounts &&
-              (window as any).google.accounts.id
-            ) {
-              clearInterval(id);
-              resolve();
-            } else if (attempts > 10) {
-              clearInterval(id);
-              reject(new Error("Google SDK not available after load"));
-            }
-          }, 200);
-        }
-      }, 50);
-    };
+    script.onload = () => resolve();
     script.onerror = (e) => reject(e);
     document.head.appendChild(script);
   });
 }
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [token, setToken] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [signOutLoading, setSignOutLoading] = useState(false);
-  const initializedRef = useRef(false);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        setUser(JSON.parse(raw));
-      }
-      const tok = localStorage.getItem("ghss_token");
-      if (tok) setToken(tok);
-    } catch (e) {
-      console.warn("Failed to load user from local storage", e);
-    }
-  }, []);
 
   const apiBase = useMemo(() => {
-    const rawApiBase =
-      (import.meta as any).env.VITE_AUTH_API_URL ||
-      (import.meta as any).env.VITE_API_BASE_URL ||
-      "";
-    if (!rawApiBase) return "";
-    try {
-      const parsed = new URL(rawApiBase);
-      if (parsed.origin === window.location.origin) return "";
-      return rawApiBase.replace(/\/$/, "");
-    } catch (e) {
-      return rawApiBase.replace(/\/$/, "");
-    }
+    const rawApiBase = import.meta.env.VITE_API_BASE_URL || "";
+    return rawApiBase.replace(/\/$/, "");
   }, []);
 
   const handleCredential = useCallback(
     async (credential: string) => {
-      setAuthLoading(true);
-      setError(null);
       try {
         const res = await fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
@@ -138,132 +68,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           setUser(data.user);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
         }
-        if (data?.token) {
-          setToken(data.token);
-          localStorage.setItem("ghss_token", data.token);
-        }
         (window as any).google?.accounts?.id?.disableAutoSelect?.();
-        toast({
-          title: "Signed in",
-          description: `Welcome ${data?.user?.name || ""}`,
-        });
+        toast({ title: "Signed in", description: `Welcome ${data?.user?.name || ""}` });
       } catch (e: any) {
         console.error("handleCredential error", e);
         setError(e.message || "Login failed");
-        toast({
-          title: "Login error",
-          description: e.message || "Unexpected error during sign in",
-          variant: "destructive",
-        });
-      } finally {
-        setAuthLoading(false);
+        toast({ title: "Login error", description: e.message || "Unexpected error during sign in", variant: "destructive" });
       }
     },
-    [apiBase],
+    [apiBase]
   );
 
   useEffect(() => {
-    let mounted = true;
-    async function init() {
-      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as
-        | string
-        | undefined;
-      if (!clientId) {
-        setError("Missing VITE_GOOGLE_CLIENT_ID");
-        setInitialized(true);
-        return;
-      }
-      try {
-        await loadGoogleSdk();
-        const g = (window as any).google;
-        if (!g?.accounts?.id) {
-          throw new Error("Google SDK not available");
-        }
-        if (!initializedRef.current) {
-          g.accounts.id.initialize({
-            client_id: clientId,
-            callback: (resp: any) => {
-              if (resp?.credential) handleCredential(resp.credential);
-            },
-            auto_select: false,
-          });
-          initializedRef.current = true;
-        }
-
-        const storedToken = localStorage.getItem("ghss_token");
-        if (storedToken) {
-          const headers: Record<string, string> = {
-            Authorization: `Bearer ${storedToken}`,
-          };
-          const me = await fetch(`${apiBase || ""}/api/auth/me`, {
-            credentials: "include",
-            headers,
-          });
-          if (me.ok) {
-            const j = await me.json();
-            if (mounted && j?.user) {
-              setUser(j.user);
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
-            }
-          }
-        }
-      } catch (e: any) {
-        console.warn("Google init failed", e);
-        setError("Failed to load Google SDK");
-      } finally {
-        if (mounted) setInitialized(true);
-      }
-    }
-    init();
-    return () => {
-      mounted = false;
-    };
-  }, [handleCredential, apiBase]);
-
-  const signIn = useCallback(() => {
-    const g = (window as any).google;
-    if (!initializedRef.current || !g?.accounts?.id) {
-      setError("Google SDK not ready. Please refresh the page.");
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+    if (!clientId) {
+      setError("Missing VITE_GOOGLE_CLIENT_ID");
+      setInitialized(true);
       return;
     }
-    try {
-      setAuthLoading(true);
-      g.accounts.id.prompt();
-      setTimeout(() => setAuthLoading(false), 8000); // Increased timeout
-    } catch (e: any) {
-      console.error("Sign in failed", e);
-      setError("Sign in failed. Try again later.");
-      setAuthLoading(false);
-    }
+
+    loadGoogleSdk()
+      .then(() => {
+        (window as any).google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (resp: any) => {
+            if (resp?.credential) handleCredential(resp.credential);
+          },
+          auto_select: false,
+        });
+      })
+      .catch((e) => {
+        console.warn("Google init failed", e);
+        setError("Failed to load Google SDK");
+      })
+      .finally(() => setInitialized(true));
+  }, [handleCredential]);
+
+  const signIn = useCallback(() => {
+    (window as any).google?.accounts?.id?.prompt();
   }, []);
 
   const signOut = useCallback(async () => {
-    setSignOutLoading(true);
     try {
-      await fetch(`${apiBase}/api/auth/logout`, {
-        method: "POST",
-        credentials: "include",
-      });
+      await fetch(`${apiBase}/api/auth/logout`, { method: "POST", credentials: "include" });
     } catch (e) {
       console.warn("Logout failed", e);
     }
     setUser(null);
-    setToken(null);
     localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem("ghss_token");
-    try {
-      (window as any).google?.accounts?.id?.disableAutoSelect?.();
-      (window as any).google?.accounts?.id?.cancel?.();
-    } catch (e) {
-      console.warn("Google sign out cleanup failed", e);
-    }
+    (window as any).google?.accounts?.id?.disableAutoSelect?.();
     toast({ title: "Signed out", description: "You are now signed out" });
-    setSignOutLoading(false);
   }, [apiBase]);
 
   const value = useMemo(
-    () => ({ user, token, initialized, error, authLoading, signOutLoading, signIn, signOut }),
-    [user, token, initialized, error, authLoading, signOutLoading, signIn, signOut],
+    () => ({ user, initialized, error, signIn, signOut }),
+    [user, initialized, error, signIn, signOut]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

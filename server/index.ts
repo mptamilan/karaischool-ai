@@ -1,14 +1,36 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+import connectSqlite3 from "connect-sqlite3";
 import { handleLogin, handleMe, handleLogout, handleAuthDebug } from "./routes/auth";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate } from "./routes/generate";
 import { handleDevLogin } from "./routes/devAuth";
+import { isAuthenticated } from "./middleware/auth";
+
+const SqliteStore = connectSqlite3(session);
 
 export function createServer() {
   const app = express();
   app.use(cookieParser());
   app.use(express.json());
+
+  app.use(
+    session({
+      store: new SqliteStore({
+        db: "sessions.sqlite",
+        concurrentDB: true,
+      }),
+      secret: process.env.SESSION_SECRET || "secret",
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production",
+      },
+    })
+  );
 
   // Auth
   app.post("/api/auth/login", handleLogin);
@@ -20,10 +42,10 @@ export function createServer() {
     app.post("/api/auth/dev-login", handleDevLogin);
   }
 
-  // API
+  // API (protected)
   app.get("/api/ping", (req, res) => res.json({ pong: true }));
-  app.get("/api/demo", handleDemo);
-  app.post("/api/generate", handleGenerate);
+  app.get("/api/demo", isAuthenticated, handleDemo);
+  app.post("/api/generate", isAuthenticated, handleGenerate);
 
   return app;
 }
