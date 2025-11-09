@@ -20,7 +20,6 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/tutor" element={<Tutor />} />
-          <Route path="/auth/google-callback" element={<GoogleCallback />} />
           <Route
             path="/about"
             element={<Placeholder title="About GHSS KARAI AI" />}
