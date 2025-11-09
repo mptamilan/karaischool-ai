@@ -169,15 +169,25 @@ export default function TutorPage() {
                 placeholder={
                   user ? "Ask anything..." : "Sign in to start chatting"
                 }
-                className="min-h-[52px] max-h-40 flex-1 rounded-2xl border bg-white/70 p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled={!user}
+                className={`min-h-[52px] max-h-40 flex-1 rounded-2xl border bg-white/70 p-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-primary ${!user ? "opacity-60 cursor-not-allowed" : ""}`}
               />
               <button
                 disabled={!canSend}
                 onClick={() => send(input.trim())}
                 className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <SendHorizonal className="h-4 w-4 mr-2" />
-                Send
+                {loading ? (
+                  <>
+                    <LoadingDots />
+                    <span className="ml-2">Thinking...</span>
+                  </>
+                ) : (
+                  <>
+                    <SendHorizonal className="h-4 w-4 mr-2" />
+                    Send
+                  </>
+                )}
               </button>
             </div>
             <div className="mt-2 text-xs text-slate-500">
