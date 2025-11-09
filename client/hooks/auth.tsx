@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const apiBase = (import.meta as any).env.VITE_AUTH_API_URL || ""; // if empty, same-origin
+  const apiBase = (import.meta as any).env.VITE_AUTH_API_URL || (import.meta as any).env.VITE_API_BASE_URL || ""; // auth server URL (fallback to VITE_API_BASE_URL)
 
   const handleCredential = useCallback(
     async (credential: string) => {
