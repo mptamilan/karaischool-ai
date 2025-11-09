@@ -17,7 +17,12 @@ export const handleLogin: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Invalid ID token", details: text });
     }
     const info = await r.json();
-    console.debug("tokeninfo result:", { iss: info.iss, aud: info.aud, sub: info.sub, email: info.email });
+    console.debug("tokeninfo result:", {
+      iss: info.iss,
+      aud: info.aud,
+      sub: info.sub,
+      email: info.email,
+    });
 
     const payload = {
       sub: info.sub,
