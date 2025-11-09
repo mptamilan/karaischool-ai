@@ -191,6 +191,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
               } catch {}
+            } else if (mounted) {
+              // Backend has no session: clear any stale client state
+              setUser(null);
+              try {
+                localStorage.removeItem(STORAGE_KEY);
+              } catch {}
             }
           }
         } catch (err) {
