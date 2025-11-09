@@ -14,7 +14,10 @@ function getUtcDayKey() {
 export const handleGenerate: RequestHandler = async (req, res) => {
   try {
     // Require authenticated JWT
-    const token = req.cookies?.ghss_token;
+    // Accept token from Authorization header or cookie
+    const authHeader = (req.headers["authorization"] as string) || "";
+    let token = req.cookies?.ghss_token as string | undefined;
+    if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token) return res.status(401).json({ error: "Authentication required" });
     const secret = process.env.SESSION_SECRET || "dev-secret";
     let payload: any = null;
