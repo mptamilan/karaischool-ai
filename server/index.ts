@@ -14,7 +14,9 @@ export function createServer() {
   // CORS
   // Default to the production Netlify site if no env provided
   const allowedOrigin =
-    process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL || "https://karaischool-ai.netlify.app";
+    process.env.ALLOWED_ORIGIN ||
+    process.env.NETLIFY_SITE_URL ||
+    "https://karaischool-ai.netlify.app";
 
   // If the allowed origin is a wildcard, echo the request origin so that
   // Access-Control-Allow-Origin will be set to the actual caller and
