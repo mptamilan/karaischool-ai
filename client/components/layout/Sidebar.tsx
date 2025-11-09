@@ -3,7 +3,7 @@ import { useDailyUsage } from "@/hooks/use-usage";
 import { BarChart3, Settings, Plus } from "lucide-react";
 
 export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
-  const { user, signIn } = useAuth();
+  const { user, signIn, signOut, authLoading, signOutLoading } = useAuth();
   const usage = useDailyUsage(user?.email ?? null);
 
   const percent = Math.round(
