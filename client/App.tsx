@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Tutor from "./pages/Tutor";
 import Placeholder from "./pages/Placeholder";
+import GoogleCallback from "./pages/GoogleCallback";
 import Header from "@/components/layout/Header";
 import { AuthProvider } from "@/hooks/auth";
 
