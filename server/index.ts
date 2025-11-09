@@ -1,14 +1,11 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import connectSqlite3 from "connect-sqlite3";
 import { handleLogin, handleMe, handleLogout, handleAuthDebug } from "./routes/auth";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate } from "./routes/generate";
 import { handleDevLogin } from "./routes/devAuth";
 import { isAuthenticated } from "./middleware/auth";
-
-const SqliteStore = connectSqlite3(session);
 
 export function createServer() {
   const app = express();
@@ -17,10 +14,6 @@ export function createServer() {
 
   app.use(
     session({
-      store: new SqliteStore({
-        db: "/tmp/sessions.sqlite",
-        concurrentDB: true,
-      }),
       secret: process.env.SESSION_SECRET || "secret",
       resave: false,
       saveUninitialized: false,

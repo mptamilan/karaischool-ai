@@ -16,7 +16,6 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@types/jsonwebtoken": "^9.0.10",
-    "connect-sqlite3": "^0.9.16",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
@@ -24,7 +23,6 @@
     "jsonwebtoken": "^9.0.2",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "sqlite3": "^5.1.7",
     "zod": "^3.25.76"
   },
   "devDependencies": {
