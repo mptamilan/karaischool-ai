@@ -95,7 +95,12 @@ export default function TutorPage() {
         { role: "assistant", content: data.text, timestamp: data.timestamp },
       ]);
     } catch (e: any) {
-      setError(e.message || "Something went wrong. Please try again.");
+      const msg = e.message || "Something went wrong. Please try again.";
+      setError(msg);
+      try {
+        const { toast } = await import("@/hooks/use-toast");
+        toast({ title: "Request failed", description: msg });
+      } catch {}
     } finally {
       setLoading(false);
     }
