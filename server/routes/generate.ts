@@ -75,7 +75,7 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     rateMap.set(key, current);
 
     // Normalize response shape - forward if already includes text, usage, timestamp
-    const payload: GenerateResponse = {
+    const responsePayload: GenerateResponse = {
       text:
         (data && (data.text || data.answer || JSON.stringify(data))) ||
         "(No content)",
@@ -86,7 +86,7 @@ export const handleGenerate: RequestHandler = async (req, res) => {
       timestamp: data.timestamp || new Date().toISOString(),
     };
 
-    res.status(200).json(payload);
+    res.status(200).json(responsePayload);
   } catch (err) {
     console.error("/api/generate error", err);
     res.status(500).json({ error: "Unexpected server error" });
