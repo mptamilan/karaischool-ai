@@ -66,7 +66,10 @@ export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
               </div>
             </div>
           ) : (
-            <div className="text-xs text-slate-600">Please sign in using the "Sign in with Google" button in the header.</div>
+            <div className="text-xs text-slate-600">
+              Please sign in using the "Sign in with Google" button in the
+              header.
+            </div>
           )}
         </div>
       </div>
