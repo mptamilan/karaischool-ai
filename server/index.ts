@@ -18,7 +18,7 @@ export function createServer() {
   app.use(
     session({
       store: new SqliteStore({
-        db: "sessions.sqlite",
+        db: "/tmp/sessions.sqlite",
         concurrentDB: true,
       }),
       secret: process.env.SESSION_SECRET || "secret",
@@ -50,3 +50,7 @@ export function createServer() {
 
   return app;
 }
+
+// Create and export the app for Vercel
+const app = createServer();
+export default app;

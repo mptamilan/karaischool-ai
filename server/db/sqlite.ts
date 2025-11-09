@@ -3,8 +3,10 @@ import fs from "fs";
 import sqlite3 from "sqlite3";
 import { User } from "@shared/api";
 
-const dbFile = process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "app.db");
+// Vercel has a writable /tmp directory. All other paths are read-only.
+const dbFile = process.env.SESSION_DB_PATH || "/tmp/app.db";
 const dir = path.dirname(dbFile);
+// This check is important for local dev but will work on Vercel too.
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
 const db = new (sqlite3.verbose().Database)(dbFile);
