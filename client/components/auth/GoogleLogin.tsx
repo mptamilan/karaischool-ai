@@ -5,9 +5,16 @@ export default function GoogleLogin() {
 
   useEffect(() => {
     try {
-      const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-      const rawApiBase = (import.meta as any).env.VITE_AUTH_API_URL || (import.meta as any).env.VITE_API_BASE_URL || "";
-      const apiBase = rawApiBase ? rawApiBase.replace(/\/$/, "") : window.location.origin;
+      const clientId = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID as
+        | string
+        | undefined;
+      const rawApiBase =
+        (import.meta as any).env.VITE_AUTH_API_URL ||
+        (import.meta as any).env.VITE_API_BASE_URL ||
+        "";
+      const apiBase = rawApiBase
+        ? rawApiBase.replace(/\/$/, "")
+        : window.location.origin;
       if (!clientId) return;
 
       const onload = document.createElement("div");
@@ -30,7 +37,7 @@ export default function GoogleLogin() {
         containerRef.current.appendChild(signin);
       }
 
-      if (!document.querySelector('script[data-google-id]')) {
+      if (!document.querySelector("script[data-google-id]")) {
         const script = document.createElement("script");
         script.src = "https://accounts.google.com/gsi/client";
         script.async = true;
