@@ -43,13 +43,13 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token)
       return res.status(401).json({ error: "Authentication required" });
-    
+
     const secret = process.env.SESSION_SECRET;
     if (!secret) {
       console.error("SESSION_SECRET not configured");
       return res.status(500).json({ error: "Server configuration error" });
     }
-    
+
     let payload: any = null;
     try {
       payload = jwt.verify(token, secret) as any;
@@ -120,21 +120,21 @@ Keep responses concise, clear, and age-appropriate for high school students.`;
       res.status(200).json(responsePayload);
     } catch (aiError: any) {
       console.error("Gemini AI error:", aiError);
-      
+
       // Don't increment rate limit on AI errors
       const errorMessage = aiError.message || "AI service error";
-      
+
       // Handle specific Gemini errors
       if (errorMessage.includes("API key")) {
-        return res.status(500).json({ 
+        return res.status(500).json({
           error: "AI service configuration error",
-          details: "API key not configured properly"
+          details: "API key not configured properly",
         });
       }
-      
-      return res.status(502).json({ 
+
+      return res.status(502).json({
         error: "AI service error. Please try again later.",
-        details: errorMessage
+        details: errorMessage,
       });
     }
   } catch (err) {
