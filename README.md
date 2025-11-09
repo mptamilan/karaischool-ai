@@ -1,6 +1,6 @@
 # GHSS KARAI AI
 
-A complete educational AI tutor website built with React + TypeScript + Vite, TailwindCSS, and an Express backend powered by Google Gemini 2.0 Flash Exp.
+A complete educational AI tutor website built with React + TypeScript + Vite, TailwindCSS, and Express serverless backend powered by Google Gemini 2.0 Flash Exp.
 
 ## 🚀 Quick Deploy to Netlify
 
@@ -17,76 +17,140 @@ Required Netlify environment variables:
 ## Tech Stack
 
 - Frontend: React + TypeScript + Vite + TailwindCSS
+- Backend: Express.js serverless functions (Netlify)
+- AI: Google Gemini 2.0 Flash Exp API (integrated directly)
 - Icons: lucide-react
-- Backend: External Express.js API hosted on Render (or your choice)
-- AI: Google Gemini 2.0 Flash Exp API (use your Render backend)
-- Deployment: Netlify (frontend) + Render (backend) — or use only Render for both
-
-Note: This repository previously included an embedded Express server for development. You indicated you have an external API at https://schoolai-server.onrender.com; the app is now configured to use that external API by default in the Tutor page. The local Express middleware has been removed from the Vite dev server to avoid conflicts.
+- Deployment: Netlify (single deployment for everything)
 
 ## Quick Start (Local)
 
 1. Install dependencies
-   - pnpm install
+   ```bash
+   pnpm install
+   ```
+
 2. Create a `.env` file (see `.env.example`)
-3. Run dev server (Vite + Express)
-   - pnpm dev
-4. Open http://localhost:8080
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your keys
+   ```
+
+3. Run dev server
+   ```bash
+   pnpm dev
+   ```
+
+4. Open http://localhost:5000
 
 ## Environment Variables
 
 Copy `.env.example` to `.env` and fill in the values.
 
-Frontend:
+### Required:
 
-- VITE_GOOGLE_CLIENT_ID: Google OAuth client ID (Web application)
-- VITE_API_BASE_URL: Base URL for backend API (e.g. your Render URL), leave empty for local dev
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth client ID (Web application)
+- `SESSION_SECRET` - Secure random secret for JWT signing (32+ chars)
+- `GOOGLE_GEMINI_API_KEY` - Gemini API key for AI tutoring
+- `NODE_ENV` - Set to `production` for Netlify
 
-Backend:
+### Optional:
 
-- GOOGLE_GEMINI_API_KEY: Gemini API key
-- ALLOWED_ORIGIN or NETLIFY_SITE_URL: Frontend origin for CORS (e.g. https://your-site.netlify.app)
-- GEMINI_MODEL (optional): defaults to `gemini-2.0-flash-exp`
+- `GEMINI_MODEL` - Gemini model to use (defaults to `gemini-2.0-flash-exp`)
+- `MAX_DAILY_REQUESTS` - Daily limit per user (defaults to `20`)
+- `ALLOWED_ORIGIN` - Frontend origin for CORS (defaults to `*`)
 
 ## Features
 
 - Modern gradient hero with school branding
-- AI Tutor page: real-time chat, Markdown rendering, request limit (20/day), progress bar, example prompts, timestamps, loading animations, error handling, mobile responsive
-- Google OAuth login via Google Identity Services (client-side), persistent via localStorage
-- Sidebar: New Chat, usage progress, account section, settings placeholder
-- Accessible, responsive, glass morphism UI
+- **AI Tutor powered by Google Gemini**: real-time chat, Markdown rendering, educational system prompt, request limit (20/day)
+- **Secure Google OAuth** login with JWT cookies and server-side validation
+- Session persistence across page reloads
+- Sidebar: New Chat, usage progress, account section
+- Progress bar showing remaining daily requests
+- Example prompts for quick start
+- Timestamps on all messages
+- Loading animations and error handling
+- Fully responsive, mobile-first design
+- Accessible UI with glass morphism effects
 
-## API
+## API Endpoints
 
-- GET `/` — Health check
-- POST `/api/generate` — Body: `{ prompt: string }` → `{ text, usage {remaining,limit}, timestamp }`
-  - Server-side in-memory IP rate limit: 20 requests/day (demonstration)
+- `GET /` — Health check
+- `POST /api/auth/login` — Google OAuth login (validates ID token with audience & issuer checks)
+- `POST /api/auth/logout` — Clear session
+- `GET /api/auth/me` — Get current user from JWT
+- `POST /api/generate` — AI tutoring endpoint (requires authentication)
+  - Body: `{ prompt: string }`
+  - Response: `{ text, usage: {remaining, limit}, timestamp }`
+  - Rate limit: 20 requests/day per user (in-memory, resets on cold start)
 
-## Deployment
+## Deployment (Netlify)
 
-### Frontend (Netlify)
+**Complete guides**: See `NETLIFY_SETUP.md` and `DEPLOYMENT_CHECKLIST.md`
 
-- Build command: `npm run build:client`
-- Publish directory: `dist/spa`
-- SPA routing: handled by `netlify.toml`
-- Set environment variables in Netlify UI: `VITE_GOOGLE_CLIENT_ID`, `VITE_API_BASE_URL` (Render backend URL)
+### Quick Setup:
 
-### Backend (Render)
+1. Push code to GitHub
 
-- Create a new Web Service pointing to this repo’s `server` build with `pnpm build:server` or use the provided Node build file
-- Runtime: Node 22
-- Set env vars: `GOOGLE_GEMINI_API_KEY`, `ALLOWED_ORIGIN` (your Netlify domain)
-- Health check path: `/`
+2. Connect repository to Netlify
+
+3. Set environment variables in Netlify dashboard:
+   - `VITE_GOOGLE_CLIENT_ID`
+   - `SESSION_SECRET`
+   - `GOOGLE_GEMINI_API_KEY`
+   - `NODE_ENV=production`
+
+4. Deploy!
+
+Everything runs as serverless functions on Netlify - no separate backend server needed.
+
+## Security
+
+- Google ID token validation (audience & issuer checks)
+- JWT-based sessions with httpOnly cookies
+- Secure cookies in production (sameSite=none)
+- No hardcoded secrets (all required via env vars)
+- Server-side rate limiting
+- Cookie and header-based authentication
+
+## Development
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start dev server (port 5000)
+pnpm dev
+
+# Build for production
+pnpm build
+
+# Run production build locally
+pnpm start
+
+# Type checking
+pnpm typecheck
+
+# Run tests
+pnpm test
+```
+
+## Documentation
+
+- `README.md` - This file
+- `NETLIFY_SETUP.md` - Complete Netlify deployment guide
+- `FIXES_APPLIED.md` - All fixes applied (8 major issues resolved)
+- `DEPLOYMENT_CHECKLIST.md` - Step-by-step deployment checklist
+- `AGENTS.md` - Architecture notes
+- `replit.md` - Project documentation
 
 ## Notes
 
-- Daily request reset uses UTC day and persists per user in localStorage.
-- For production, prefer server-side rate limits and persistence.
+- Rate limiting is in-memory and resets when Netlify functions cold-start
+- For persistent rate limiting, consider using a database or Netlify KV
+- Daily request reset uses UTC day
+- Session expires after 7 days
 
-## Scripts
+## License
 
-- pnpm dev — Vite + Express (single-port dev)
-- pnpm build — Build client + server
-- pnpm start — Run built server (Express)
-- pnpm typecheck — TypeScript
-- pnpm test — Vitest
+See LICENSE file

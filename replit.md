@@ -4,14 +4,25 @@
 Educational AI tutor website with Google OAuth authentication and AI-powered tutoring. Built with React + TypeScript + Vite frontend and Express serverless backend for Netlify deployment.
 
 ## Recent Changes (Nov 9, 2025)
-Fixed all Netlify deployment issues:
-- Authentication (Google OAuth login/logout)
-- API serverless functions
-- AI generation endpoint
-- Build configuration
-- Environment variable setup
 
-See `FIXES_APPLIED.md` for complete list of fixes.
+### Major Update: Integrated Gemini AI Directly
+- ✅ **No separate backend needed** - Gemini AI now runs in the same project
+- ✅ Added `@google/generative-ai` package for direct API calls
+- ✅ Educational system prompt built-in for better tutoring
+- ✅ Simplified deployment - just add Gemini API key to Netlify
+
+### Security Fixes
+- ✅ Fixed critical Google OAuth token validation (audience & issuer checks)
+- ✅ Removed hardcoded SESSION_SECRET fallbacks
+- ✅ All authentication routes now require proper configuration
+
+### Other Fixes
+- ✅ Fixed authentication hook scoping bug
+- ✅ Updated build configuration for pnpm
+- ✅ Improved Netlify serverless functions configuration
+- ✅ Comprehensive documentation added
+
+See `FIXES_APPLIED.md` for complete list of 8 fixes applied.
 
 ## Project Architecture
 
@@ -24,10 +35,12 @@ See `FIXES_APPLIED.md` for complete list of fixes.
 
 ### Backend (Express Serverless)
 - **Runtime**: Express 5 on Netlify Functions
-- **Auth**: JWT-based sessions (7-day expiration)
-- **AI**: Proxies to external Gemini API service
+- **Auth**: JWT-based sessions with Google OAuth validation (7-day expiration)
+- **AI**: Direct Gemini API integration (no external backend)
+- **AI Model**: Google Gemini 2.0 Flash Exp (configurable)
 - **Rate Limiting**: In-memory (20 requests/day per user)
 - **Cookies**: httpOnly, secure in production
+- **Security**: Audience validation, issuer validation, required secrets
 
 ### Key Routes
 - `GET /` - Homepage
@@ -46,10 +59,15 @@ See `FIXES_APPLIED.md` for complete list of fixes.
 - **Docs**: See `NETLIFY_SETUP.md` and `DEPLOYMENT_CHECKLIST.md`
 
 ### Required Environment Variables
-- `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID
-- `SESSION_SECRET` - JWT signing secret (32+ chars)
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID (for both client AND server validation)
+- `SESSION_SECRET` - JWT signing secret (32+ chars, NO fallback allowed)
+- `GOOGLE_GEMINI_API_KEY` - Gemini API key for AI tutoring
 - `NODE_ENV=production`
-- `SCHOOLAI_API_URL` - AI backend URL (optional)
+
+### Optional Environment Variables
+- `GEMINI_MODEL` - Model to use (defaults to `gemini-2.0-flash-exp`)
+- `MAX_DAILY_REQUESTS` - Rate limit (defaults to 20)
+- `ALLOWED_ORIGIN` - CORS origin (defaults to `*`)
 
 ## User Preferences
 - Package manager: pnpm
@@ -77,8 +95,8 @@ pnpm test         # Run tests
 ## Known Limitations
 - Rate limiting is in-memory (resets on function cold-start)
 - No conversation history persistence
-- SQLite database included but not currently used
-- External AI service dependency
+- SQLite database code included but not currently used
+- Gemini API key required (free tier available)
 
 ## Documentation Files
 - `README.md` - Project overview

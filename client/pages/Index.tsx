@@ -81,7 +81,7 @@ export default function Index() {
           <Feature
             icon={<Zap className="h-6 w-6" />}
             title="Fast & Secure"
-            desc="Google login, daily limits, and a reliable backend deployed on Render."
+            desc="Google login, daily limits, and integrated Gemini AI - all in one deployment."
           />
         </div>
       </section>
