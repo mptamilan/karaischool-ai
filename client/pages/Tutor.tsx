@@ -41,7 +41,17 @@ export default function TutorPage() {
     [loading, input, usage.remaining, user],
   );
 
-  const apiBase = (import.meta as any).env.VITE_API_BASE_URL || ""; // default to same origin (our server)
+  const rawApiBase = (import.meta as any).env.VITE_API_BASE_URL || "";
+  const apiBase = (() => {
+    if (!rawApiBase) return "";
+    try {
+      const parsed = new URL(rawApiBase);
+      if (parsed.origin === window.location.origin) return "";
+      return rawApiBase;
+    } catch (e) {
+      return rawApiBase;
+    }
+  })(); // default to same origin (our server)
 
   const send = async (text: string) => {
     if (!user) {
