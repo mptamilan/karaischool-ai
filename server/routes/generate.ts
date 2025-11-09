@@ -1,10 +1,12 @@
 import type { RequestHandler } from "express";
 import type { GenerateRequest, GenerateResponse } from "@shared/api";
 import jwt from "jsonwebtoken";
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
 // In-memory rate limiting per user/day (not persistent)
 const rateMap = new Map<string, { day: string; count: number }>();
+
+// Lazy-loaded Gemini client (dynamic import to avoid build/runtime issues if module missing)
+let genAI: any = null;
+let genAIAvailable = true;
 const MAX_PER_DAY = Number(process.env.MAX_DAILY_REQUESTS || "20");
 
 function getUtcDayKey() {
