@@ -1,26 +1,12 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { LogIn, LogOut } from "lucide-react";
-import { useEffect, useRef } from "react";
 import LoadingDots from "@/components/chat/LoadingDots";
+import GoogleLogin from "@/components/auth/GoogleLogin";
 
 export default function Header() {
-  const { user, signIn, signOut, authLoading, signOutLoading } = useAuth();
-  const btnRef = useRef<HTMLDivElement | null>(null);
+  const { user, signOut, signOutLoading } = useAuth();
 
-  useEffect(() => {
-    const g = (window as any).google;
-    if (g?.accounts?.id && btnRef.current) {
-      try {
-        g.accounts.id.renderButton(btnRef.current, {
-          theme: "outline",
-          size: "large",
-        });
-      } catch (e) {
-        // ignore
-      }
-    }
-  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b bg-white/70 backdrop-blur">
@@ -113,26 +99,7 @@ export default function Header() {
             </>
           ) : (
             <>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={signIn}
-                  className="btn-secondary"
-                  disabled={!!authLoading}
-                >
-                  {authLoading ? (
-                    <>
-                      <LoadingDots />
-                      <span className="ml-2">Signing in...</span>
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="h-4 w-4 mr-2" />
-                      Sign in with Google
-                    </>
-                  )}
-                </button>
-                <div ref={btnRef} className="ml-2" aria-hidden="true" />
-              </div>
+              <GoogleLogin />
             </>
           )}
         </div>
