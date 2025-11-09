@@ -5,12 +5,13 @@ import jwt from "jsonwebtoken";
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
     // Accept either { id_token } or Google's direct POST field { credential }
-  const idToken = req.body?.id_token || req.body?.credential || req.body?.idToken;
-  console.debug("/api/auth/login called, id_token present:", !!idToken);
-  if (!idToken) return res.status(400).json({ error: "id_token required" });
+    const idToken =
+      req.body?.id_token || req.body?.credential || req.body?.idToken;
+    console.debug("/api/auth/login called, id_token present:", !!idToken);
+    if (!idToken) return res.status(400).json({ error: "id_token required" });
 
-  // Verify token with Google tokeninfo
-  const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+    // Verify token with Google tokeninfo
+    const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
     const r = await fetch(url);
     if (!r.ok) {
       const text = await r.text();
@@ -36,14 +37,17 @@ export const handleLogin: RequestHandler = async (req, res) => {
         expected: expectedClientId,
         received: info.aud,
       });
-      return res.status(401).json({ 
+      return res.status(401).json({
         error: "Invalid token audience",
-        details: "Token was not issued for this application"
+        details: "Token was not issued for this application",
       });
     }
 
     // Verify issuer is Google
-    if (info.iss !== "https://accounts.google.com" && info.iss !== "accounts.google.com") {
+    if (
+      info.iss !== "https://accounts.google.com" &&
+      info.iss !== "accounts.google.com"
+    ) {
       console.error("Invalid token issuer:", info.iss);
       return res.status(401).json({ error: "Invalid token issuer" });
     }
@@ -59,9 +63,9 @@ export const handleLogin: RequestHandler = async (req, res) => {
     const secret = process.env.SESSION_SECRET;
     if (!secret) {
       console.error("SESSION_SECRET not configured - cannot issue tokens");
-      return res.status(500).json({ 
+      return res.status(500).json({
         error: "Server configuration error",
-        details: "Authentication secret not configured"
+        details: "Authentication secret not configured",
       });
     }
     const token = jwt.sign(payload, secret, { expiresIn: "7d" });
@@ -121,13 +125,13 @@ export const handleMe: RequestHandler = async (req, res) => {
     const authHeader = (req.headers["authorization"] as string) || "";
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token) return res.status(200).json({ user: null });
-    
+
     const secret = process.env.SESSION_SECRET;
     if (!secret) {
       console.error("SESSION_SECRET not configured");
       return res.status(500).json({ error: "Server configuration error" });
     }
-    
+
     try {
       const payload = jwt.verify(token, secret) as any;
       return res.json({

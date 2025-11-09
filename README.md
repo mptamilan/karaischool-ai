@@ -9,6 +9,7 @@ This project can be deployed to Vercel as a single repository: static frontend b
 See `FIXES_APPLIED.md` for details on previous fixes.
 
 Required environment variables (set in Vercel dashboard or your host):
+
 - `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID
 - `SESSION_SECRET` - Secret for JWT signing (generate random 32+ char string)
 - `GOOGLE_GEMINI_API_KEY` - Your Gemini API key
@@ -25,17 +26,20 @@ Required environment variables (set in Vercel dashboard or your host):
 ## Quick Start (Local)
 
 1. Install dependencies
+
    ```bash
    pnpm install
    ```
 
 2. Create a `.env` file (see `.env.example`)
+
    ```bash
    cp .env.example .env
    # Edit .env and add your keys
    ```
 
 3. Run dev server
+
    ```bash
    pnpm dev
    ```
@@ -103,6 +107,7 @@ Quick Setup:
 5. Deploy!
 
 Notes:
+
 - Google OAuth redirect: add `https://<your-vercel-site>/auth/google-callback` to Authorized redirect URIs and add `https://<your-vercel-site>` to Authorized JavaScript origins.
 - Local dev: use `http://localhost:5000/auth/google-callback` as redirect when testing locally.
 
