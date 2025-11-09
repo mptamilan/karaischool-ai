@@ -84,25 +84,27 @@ Copy `.env.example` to `.env` and fill in the values.
   - Response: `{ text, usage: {remaining, limit}, timestamp }`
   - Rate limit: 20 requests/day per user (in-memory, resets on cold start)
 
-## Deployment (Netlify)
+## Deployment (Vercel)
 
-**Complete guides**: See `NETLIFY_SETUP.md` and `DEPLOYMENT_CHECKLIST.md`
-
-### Quick Setup:
+Quick Setup:
 
 1. Push code to GitHub
 
-2. Connect repository to Netlify
+2. Connect repository to Vercel
 
-3. Set environment variables in Netlify dashboard:
+3. In Vercel dashboard, set project environment variables:
    - `VITE_GOOGLE_CLIENT_ID`
    - `SESSION_SECRET`
    - `GOOGLE_GEMINI_API_KEY`
    - `NODE_ENV=production`
 
-4. Deploy!
+4. Ensure Vercel build command is `pnpm build` and output directory is `dist/spa` (Vite output). Vercel will build serverless functions from the `api/` folder — our Express adapter is exposed at `api/index.ts`.
 
-Everything runs as serverless functions on Netlify - no separate backend server needed.
+5. Deploy!
+
+Notes:
+- Google OAuth redirect: add `https://<your-vercel-site>/auth/google-callback` to Authorized redirect URIs and add `https://<your-vercel-site>` to Authorized JavaScript origins.
+- Local dev: use `http://localhost:5000/auth/google-callback` as redirect when testing locally.
 
 ## Security
 
