@@ -1,7 +1,8 @@
 import path from "path";
 import fs from "fs";
 
-const dbFile = process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "app.db");
+const dbFile =
+  process.env.SESSION_DB_PATH || path.join(process.cwd(), "data", "app.db");
 const dir = path.dirname(dbFile);
 if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
 
@@ -28,7 +29,10 @@ try {
   usingSqlite = true;
   console.log("SQLite initialized at", dbFile);
 } catch (e) {
-  console.warn("sqlite3 not available, falling back to JSON store", e && e.message);
+  console.warn(
+    "sqlite3 not available, falling back to JSON store",
+    e && e.message,
+  );
 }
 
 // JSON fallback store
@@ -58,21 +62,34 @@ export function findOrCreateUserFromGoogle(info: {
 }) {
   if (usingSqlite && db) {
     return new Promise<any>((resolve, reject) => {
-      db.get("SELECT * FROM users WHERE google_sub = ?", [info.sub], (err: any, row: any) => {
-        if (err) return reject(err);
-        if (row) return resolve(row);
-        db.run(
-          `INSERT INTO users (google_sub, name, email, picture) VALUES (?,?,?,?)`,
-          [info.sub, info.name || null, info.email || null, info.picture || null],
-          function (e: any) {
-            if (e) return reject(e);
-            db.get("SELECT * FROM users WHERE id = ?", [this.lastID], (err2: any, newRow: any) => {
-              if (err2) return reject(err2);
-              resolve(newRow);
-            });
-          },
-        );
-      });
+      db.get(
+        "SELECT * FROM users WHERE google_sub = ?",
+        [info.sub],
+        (err: any, row: any) => {
+          if (err) return reject(err);
+          if (row) return resolve(row);
+          db.run(
+            `INSERT INTO users (google_sub, name, email, picture) VALUES (?,?,?,?)`,
+            [
+              info.sub,
+              info.name || null,
+              info.email || null,
+              info.picture || null,
+            ],
+            function (e: any) {
+              if (e) return reject(e);
+              db.get(
+                "SELECT * FROM users WHERE id = ?",
+                [this.lastID],
+                (err2: any, newRow: any) => {
+                  if (err2) return reject(err2);
+                  resolve(newRow);
+                },
+              );
+            },
+          );
+        },
+      );
     });
   }
 

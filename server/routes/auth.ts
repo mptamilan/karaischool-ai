@@ -69,9 +69,9 @@ export const handleLogin: RequestHandler = async (req, res) => {
         picture: info.picture,
       });
       // attach DB id if available
-      if (saved && saved.id) payload['id'] = saved.id;
+      if (saved && saved.id) payload["id"] = saved.id;
     } catch (e) {
-      console.warn('Failed to persist user to DB', e);
+      console.warn("Failed to persist user to DB", e);
     }
 
     // CRITICAL: Require SESSION_SECRET in production to prevent token forgery
