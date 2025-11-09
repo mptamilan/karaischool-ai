@@ -22,14 +22,20 @@ export function createServer() {
   const corsOptions =
     allowedOrigin === "*"
       ? {
-          origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+          origin: (
+            origin: string | undefined,
+            callback: (err: Error | null, allow?: boolean | string) => void,
+          ) => {
             // allow requests with no origin (mobile apps, curl)
             if (!origin) return callback(null, true);
             return callback(null, origin);
           },
           credentials: true,
         }
-      : { origin: allowedOrigin === "" ? true : [allowedOrigin], credentials: true };
+      : {
+          origin: allowedOrigin === "" ? true : [allowedOrigin],
+          credentials: true,
+        };
 
   app.use(cors(corsOptions));
 
