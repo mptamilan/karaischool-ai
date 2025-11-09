@@ -1,5 +1,5 @@
 import type { RequestHandler } from "express";
-import { findOrCreateUserFromGoogle, getUserById } from "../db/sqlite";
+import jwt from "jsonwebtoken";
 
 // POST /api/auth/login { id_token }
 export const handleLogin: RequestHandler = async (req, res) => {
@@ -7,7 +7,7 @@ export const handleLogin: RequestHandler = async (req, res) => {
     const idToken = req.body?.id_token;
     if (!idToken) return res.status(400).json({ error: "id_token required" });
 
-    // Verify token with Google
+    // Verify token with Google tokeninfo
     const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
     const r = await fetch(url);
     if (!r.ok) {
@@ -16,33 +16,28 @@ export const handleLogin: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Invalid ID token" });
     }
     const info = await r.json();
-    // info contains: aud, sub, email, name, picture, exp, iat
-    const expectedAud =
-      process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_OAUTH_CLIENT_ID;
-    if (expectedAud && info.aud !== expectedAud) {
-      console.warn("token audience mismatch", info.aud, expectedAud);
-      // don't fail hard, but warn
-    }
 
-    // Create or find user in sqlite
-    const user = await findOrCreateUserFromGoogle({
+    const payload = {
       sub: info.sub,
       name: info.name,
       email: info.email,
       picture: info.picture,
+    };
+
+    const secret = process.env.SESSION_SECRET || "dev-secret";
+    const token = jwt.sign(payload, secret, { expiresIn: "7d" });
+
+    const isProd = process.env.NODE_ENV === "production";
+
+    res.cookie("ghss_token", token, {
+      httpOnly: true,
+      secure: isProd,
+      sameSite: isProd ? "none" : "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
     });
 
-    // Create session
-    (req.session as any).userId = user.id;
-
-    res.json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        picture: user.picture,
-      },
-    });
+    res.json({ user: payload });
   } catch (err) {
     console.error("/api/auth/login error", err);
     res.status(500).json({ error: "Server error" });
@@ -51,17 +46,23 @@ export const handleLogin: RequestHandler = async (req, res) => {
 
 // POST /api/auth/logout
 export const handleLogout: RequestHandler = async (req, res) => {
-  req.session = null as any;
+  const isProd = process.env.NODE_ENV === "production";
+  res.cookie("ghss_token", "", { maxAge: 0, path: "/", httpOnly: true, secure: isProd, sameSite: isProd ? "none" : "lax" });
   res.json({ ok: true });
 };
 
 // GET /api/auth/me
 export const handleMe: RequestHandler = async (req, res) => {
   try {
-    const uid = (req.session as any)?.userId;
-    if (!uid) return res.status(200).json({ user: null });
-    const user = await getUserById(uid);
-    res.json({ user });
+    const token = req.cookies?.ghss_token;
+    if (!token) return res.status(200).json({ user: null });
+    const secret = process.env.SESSION_SECRET || "dev-secret";
+    try {
+      const payload = jwt.verify(token, secret) as any;
+      return res.json({ user: { sub: payload.sub, name: payload.name, email: payload.email, picture: payload.picture } });
+    } catch (e) {
+      return res.status(200).json({ user: null });
+    }
   } catch (err) {
     console.error("/api/auth/me error", err);
     res.status(500).json({ error: "Server error" });
