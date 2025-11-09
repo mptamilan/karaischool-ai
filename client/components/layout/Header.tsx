@@ -1,11 +1,11 @@
 import { Link, NavLink } from "react-router-dom";
-import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
 import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useRef } from "react";
+import LoadingDots from "@/components/chat/LoadingDots";
 
 export default function Header() {
-  const { user, signIn, signOut } = useAuth();
+  const { user, signIn, signOut, authLoading, signOutLoading } = useAuth();
   const btnRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -93,17 +93,35 @@ export default function Header() {
                   <div className="text-slate-500 text-xs">{user.email}</div>
                 </div>
               </div>
-              <button onClick={signOut} className="btn-primary">
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
+              <button onClick={signOut} className="btn-primary" disabled={!!signOutLoading}>
+                {signOutLoading ? (
+                  <>
+                    <LoadingDots />
+                    <span className="ml-2">Signing out...</span>
+                  </>
+                ) : (
+                  <>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </>
+                )}
               </button>
             </>
           ) : (
             <>
               <div className="flex items-center gap-2">
-                <button onClick={signIn} className="btn-secondary">
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Sign in with Google
+                <button onClick={signIn} className="btn-secondary" disabled={!!authLoading}>
+                  {authLoading ? (
+                    <>
+                      <LoadingDots />
+                      <span className="ml-2">Signing in...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Sign in with Google
+                    </>
+                  )}
                 </button>
                 <div ref={btnRef} className="ml-2" aria-hidden="true" />
               </div>
