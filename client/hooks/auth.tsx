@@ -91,17 +91,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [initialized, setInitialized] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [signOutLoading, setSignOutLoading] = useState(false);
   const initializedRef = useRef(false);
 
+  // Hydrate from localStorage immediately so UI shows logged-in state fast
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      try {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
         setUser(JSON.parse(raw));
-      } catch {}
-    }
+      }
+      const tok = localStorage.getItem("ghss_token");
+      if (tok) setToken(tok);
+    } catch {}
   }, []);
 
   // Determine API base: prefer same-origin unless an explicit remote URL is configured
@@ -123,7 +129,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const handleCredential = useCallback(
     async (credential: string) => {
-      // Send id_token to backend to create a session
+      setAuthLoading(true);
+      setError(null);
       try {
         const res = await fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
@@ -134,6 +141,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const data = await res.json();
         if (!res.ok) {
           setError(data?.error || "Login failed");
+          setAuthLoading(false);
           return;
         }
         if (data?.user) {
@@ -142,9 +150,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
           } catch {}
         }
+        if (data?.token) {
+          setToken(data.token);
+          try {
+            localStorage.setItem("ghss_token", data.token);
+          } catch {}
+        }
+        // Ensure Google does not auto-select next time
+        try {
+          (window as any).google?.accounts?.id?.disableAutoSelect?.();
+        } catch {}
       } catch (e: any) {
         console.error("handleCredential error", e);
         setError("Login failed");
+      } finally {
+        setAuthLoading(false);
       }
     },
     [apiBase],
@@ -179,10 +199,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           initializedRef.current = true;
         }
 
-        // try restore session via backend
+        // Attempt to restore session via backend using cookie or stored token
         try {
+          const headers: Record<string, string> = {};
+          const storedToken = localStorage.getItem("ghss_token");
+          if (storedToken) headers["Authorization"] = `Bearer ${storedToken}`;
           const me = await fetch(`${apiBase || ""}/api/auth/me`, {
             credentials: "include",
+            headers,
           });
           if (me.ok) {
             const j = await me.json();
@@ -190,12 +214,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               setUser(j.user);
               try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
-              } catch {}
-            } else if (mounted) {
-              // Backend has no session: clear any stale client state
-              setUser(null);
-              try {
-                localStorage.removeItem(STORAGE_KEY);
               } catch {}
             }
           }
@@ -223,14 +241,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
     try {
+      setAuthLoading(true);
+      // Prompt will eventually call our callback which clears authLoading
       g.accounts.id.prompt();
+      // Fallback: clear loading after 6s to avoid stuck UI
+      setTimeout(() => setAuthLoading(false), 6000);
     } catch (e: any) {
       console.error("Sign in failed", e);
       setError("Sign in failed. Try again later.");
+      setAuthLoading(false);
     }
   }, []);
 
   const signOut = useCallback(async () => {
+    setSignOutLoading(true);
     try {
       await fetch(`${apiBase}/api/auth/logout`, {
         method: "POST",
@@ -239,19 +263,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } catch (e) {
       // ignore
     }
+    // Clear client-side state
     setUser(null);
+    setToken(null);
     try {
       localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem("ghss_token");
     } catch {}
+    // End Google auto-select and cancel prompt
     const g = (window as any).google;
     try {
+      g?.accounts?.id?.disableAutoSelect && g.accounts.id.disableAutoSelect();
       g?.accounts?.id?.cancel && g.accounts.id.cancel();
     } catch {}
+    setSignOutLoading(false);
   }, [apiBase]);
 
   const value = useMemo(
-    () => ({ user, initialized, error, signIn, signOut }),
-    [user, initialized, error, signIn, signOut],
+    () => ({ user, token, initialized, error, authLoading, signOutLoading, signIn, signOut }),
+    [user, token, initialized, error, authLoading, signOutLoading, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
