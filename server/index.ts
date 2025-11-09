@@ -50,6 +50,11 @@ export function createServer() {
   app.post("/api/auth/logout", handleLogout);
   app.get("/api/auth/me", handleMe);
 
+  // Dev-only login helper (creates a JWT and sets cookie) for testing
+  if (process.env.NODE_ENV !== "production") {
+    app.post("/api/auth/devlogin", handleDevLogin as any);
+  }
+
   // AI generate endpoint
   app.post("/api/generate", handleGenerate);
 
