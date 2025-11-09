@@ -20,7 +20,13 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token)
       return res.status(401).json({ error: "Authentication required" });
-    const secret = process.env.SESSION_SECRET || "dev-secret";
+    
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) {
+      console.error("SESSION_SECRET not configured");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+    
     let payload: any = null;
     try {
       payload = jwt.verify(token, secret) as any;

@@ -2,6 +2,18 @@
 
 A complete educational AI tutor website built with React + TypeScript + Vite, TailwindCSS, and an Express backend powered by Google Gemini 2.0 Flash Exp.
 
+## 🚀 Quick Deploy to Netlify
+
+**All deployment issues have been fixed!** See `NETLIFY_SETUP.md` and `FIXES_APPLIED.md` for details.
+
+Required Netlify environment variables:
+- `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID
+- `SESSION_SECRET` - Secret for JWT signing (generate random 32+ char string)
+- `NODE_ENV=production`
+
+Optional:
+- `SCHOOLAI_API_URL` - Your AI backend URL (defaults to https://schoolai-server.onrender.com)
+
 ## Tech Stack
 
 - Frontend: React + TypeScript + Vite + TailwindCSS

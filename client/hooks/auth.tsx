@@ -131,36 +131,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   })();
 
+  // Helper function to try configured API base with fallback to same-origin
+  const fetchWithFallback = useCallback(async (input: string, init?: RequestInit) => {
+    const urls: string[] = [];
+    if (/^https?:\/\//i.test(input)) {
+      urls.push(input);
+      try {
+        // also try relative path on same origin
+        const rel = input.replace(/^https?:\/\/[^/]+/i, "");
+        if (rel) urls.push(rel);
+      } catch {}
+    } else {
+      urls.push(input);
+    }
+    for (const u of urls) {
+      try {
+        const r = await fetch(u, init);
+        if (r.status !== 404) return r;
+      } catch (e) {
+        // ignore and try next
+      }
+    }
+    // final attempt
+    return fetch(input, init);
+  }, []);
+
   const handleCredential = useCallback(
     async (credential: string) => {
       setAuthLoading(true);
       setError(null);
       try {
-        // Try configured API base, but fallback to same-origin if the configured host doesn't expose auth routes
-        async function fetchWithFallback(input: string, init?: RequestInit) {
-          const urls: string[] = [];
-          if (/^https?:\/\//i.test(input)) {
-            urls.push(input);
-            try {
-              // also try relative path on same origin
-              const rel = input.replace(/^https?:\/\/[^/]+/i, "");
-              if (rel) urls.push(rel);
-            } catch {}
-          } else {
-            urls.push(input);
-          }
-          for (const u of urls) {
-            try {
-              const r = await fetch(u, init);
-              if (r.status !== 404) return r;
-            } catch (e) {
-              // ignore and try next
-            }
-          }
-          // final attempt
-          return fetch(input, init);
-        }
-
         const res = await fetchWithFallback(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -208,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setAuthLoading(false);
       }
     },
-    [apiBase],
+    [apiBase, fetchWithFallback],
   );
 
   useEffect(() => {
@@ -273,7 +273,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       mounted = false;
     };
-  }, [handleCredential, apiBase]);
+  }, [handleCredential, apiBase, fetchWithFallback]);
 
   const signIn = useCallback(() => {
     const g = (window as any).google;

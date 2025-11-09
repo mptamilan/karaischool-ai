@@ -24,6 +24,29 @@ export const handleLogin: RequestHandler = async (req, res) => {
       email: info.email,
     });
 
+    // CRITICAL: Verify audience matches our client ID to prevent token substitution attacks
+    const expectedClientId = process.env.VITE_GOOGLE_CLIENT_ID;
+    if (!expectedClientId) {
+      console.error("VITE_GOOGLE_CLIENT_ID not configured");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+    if (info.aud !== expectedClientId) {
+      console.error("Token audience mismatch:", {
+        expected: expectedClientId,
+        received: info.aud,
+      });
+      return res.status(401).json({ 
+        error: "Invalid token audience",
+        details: "Token was not issued for this application"
+      });
+    }
+
+    // Verify issuer is Google
+    if (info.iss !== "https://accounts.google.com" && info.iss !== "accounts.google.com") {
+      console.error("Invalid token issuer:", info.iss);
+      return res.status(401).json({ error: "Invalid token issuer" });
+    }
+
     const payload = {
       sub: info.sub,
       name: info.name,
@@ -31,7 +54,15 @@ export const handleLogin: RequestHandler = async (req, res) => {
       picture: info.picture,
     };
 
-    const secret = process.env.SESSION_SECRET || "dev-secret";
+    // CRITICAL: Require SESSION_SECRET in production to prevent token forgery
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) {
+      console.error("SESSION_SECRET not configured - cannot issue tokens");
+      return res.status(500).json({ 
+        error: "Server configuration error",
+        details: "Authentication secret not configured"
+      });
+    }
     const token = jwt.sign(payload, secret, { expiresIn: "7d" });
 
     const isProd = process.env.NODE_ENV === "production";
@@ -89,7 +120,13 @@ export const handleMe: RequestHandler = async (req, res) => {
     const authHeader = (req.headers["authorization"] as string) || "";
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();
     if (!token) return res.status(200).json({ user: null });
-    const secret = process.env.SESSION_SECRET || "dev-secret";
+    
+    const secret = process.env.SESSION_SECRET;
+    if (!secret) {
+      console.error("SESSION_SECRET not configured");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+    
     try {
       const payload = jwt.verify(token, secret) as any;
       return res.json({

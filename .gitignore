@@ -24,4 +24,8 @@ dist-ssr
 *.sw?
 
 .config/
-!.env
+.env
+.env.local
+.env.production
+data/
+*.db
