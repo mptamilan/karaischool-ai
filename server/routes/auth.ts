@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import jwt from "jsonwebtoken";
+import { findOrCreateUserFromGoogle } from "../db/sqlite";
 
 // POST /api/auth/login { id_token }
 export const handleLogin: RequestHandler = async (req, res) => {
