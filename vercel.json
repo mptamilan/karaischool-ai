@@ -19,7 +19,11 @@
       "dest": "server/index.ts"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
+      "status": 200,
       "dest": "/index.html"
     }
   ]
