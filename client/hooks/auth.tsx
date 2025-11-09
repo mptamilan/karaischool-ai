@@ -136,7 +136,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setAuthLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${apiBase}/api/auth/login`, {
+        // Try configured API base, but fallback to same-origin if the configured host doesn't expose auth routes
+      async function fetchWithFallback(input: string, init?: RequestInit) {
+        const urls: string[] = [];
+        if (/^https?:\/\//i.test(input)) {
+          urls.push(input);
+          try {
+            // also try relative path on same origin
+            const rel = input.replace(/^https?:\/\/[^/]+/i, "");
+            if (rel) urls.push(rel);
+          } catch {}
+        } else {
+          urls.push(input);
+        }
+        for (const u of urls) {
+          try {
+            const r = await fetch(u, init);
+            if (r.status !== 404) return r;
+          } catch (e) {
+            // ignore and try next
+          }
+        }
+        // final attempt
+        return fetch(input, init);
+      }
+
+      const res = await fetchWithFallback(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -220,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           const headers: Record<string, string> = {};
           const storedToken = localStorage.getItem("ghss_token");
           if (storedToken) headers["Authorization"] = `Bearer ${storedToken}`;
-          const me = await fetch(`${apiBase || ""}/api/auth/me`, {
+          const me = await fetchWithFallback(`${apiBase || ""}/api/auth/me`, {
             credentials: "include",
             headers,
           });
