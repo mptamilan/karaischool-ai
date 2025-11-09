@@ -2,13 +2,13 @@
 
 A complete educational AI tutor website built with React + TypeScript + Vite, TailwindCSS, and Express serverless backend powered by Google Gemini 2.0 Flash Exp.
 
-## 🚀 Quick Deploy to Netlify
+## 🚀 Quick Deploy to Vercel
 
-**All deployment issues have been fixed! Gemini AI is now integrated directly - no separate backend needed!**
+This project can be deployed to Vercel as a single repository: static frontend built with Vite and a serverless Express adapter for API routes.
 
-See `NETLIFY_SETUP.md` and `FIXES_APPLIED.md` for details.
+See `FIXES_APPLIED.md` for details on previous fixes.
 
-Required Netlify environment variables:
+Required environment variables (set in Vercel dashboard or your host):
 - `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID
 - `SESSION_SECRET` - Secret for JWT signing (generate random 32+ char string)
 - `GOOGLE_GEMINI_API_KEY` - Your Gemini API key
@@ -17,10 +17,10 @@ Required Netlify environment variables:
 ## Tech Stack
 
 - Frontend: React + TypeScript + Vite + TailwindCSS
-- Backend: Express.js serverless functions (Netlify)
-- AI: Google Gemini 2.0 Flash Exp API (integrated directly)
+- Backend: Express.js serverless adapter (Vercel functions)
+- AI: Google Gemini 2.0 Flash Exp API (integrated via your API key)
 - Icons: lucide-react
-- Deployment: Netlify (single deployment for everything)
+- Deployment: Vercel (frontend + serverless functions)
 
 ## Quick Start (Local)
 
