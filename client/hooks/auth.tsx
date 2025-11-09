@@ -104,10 +104,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const apiBase =
+  // Determine API base: prefer same-origin unless an explicit remote URL is configured
+  const rawApiBase =
     (import.meta as any).env.VITE_AUTH_API_URL ||
     (import.meta as any).env.VITE_API_BASE_URL ||
-    ""; // auth server URL (fallback to VITE_API_BASE_URL)
+    "";
+  const apiBase = (() => {
+    if (!rawApiBase) return "";
+    try {
+      const parsed = new URL(rawApiBase);
+      // If the configured API base points to the same origin as the app, use relative paths
+      if (parsed.origin === window.location.origin) return "";
+      return rawApiBase;
+    } catch (e) {
+      return rawApiBase;
+    }
+  })();
 
   const handleCredential = useCallback(
     async (credential: string) => {
