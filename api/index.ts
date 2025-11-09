@@ -1,4 +1,4 @@
-import { createServer } from "../server";
+import { createServer } from "../server/index";
 
 // Vercel serverless entry point.
 // We create a fresh Express app and forward the incoming request/response to it.
