@@ -14,9 +14,6 @@ function getUtcDayKey() {
   return now.toISOString().slice(0, 10); // YYYY-MM-DD
 }
 
-// Initialize Gemini AI
-let genAI: GoogleGenerativeAI | null = null;
-
 async function getGeminiClient() {
   const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
   if (!apiKey) {
@@ -83,7 +80,7 @@ export const handleGenerate: RequestHandler = async (req, res) => {
 
     // Call Gemini AI directly
     try {
-      const gemini = getGeminiClient();
+      const gemini = await getGeminiClient();
       const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
       const model = gemini.getGenerativeModel({ model: modelName });
 
