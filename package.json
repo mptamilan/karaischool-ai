@@ -8,7 +8,7 @@
   "packageManager": "pnpm@10.20.0",
   "scripts": {
     "dev": "tsx server/dev-server.ts",
-    "build": "vite build",
+    "build": "vite build && tsx server/node-build.ts",
     "postinstall": "pnpm --filter fusion-starter-server-build install",
     "test": "vitest --run",
     "format.fix": "prettier --write .",
