@@ -34,6 +34,7 @@
     "jsonwebtoken": "^9.0.2",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
+    "session-file-store": "^1.5.0",
     "tsx": "^4.20.6",
     "zod": "^3.25.76"
   },

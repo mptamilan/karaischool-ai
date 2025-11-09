@@ -1,11 +1,14 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import sessionFileStore from "session-file-store";
 import { handleLogin, handleMe, handleLogout, handleAuthDebug } from "./routes/auth";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate } from "./routes/generate";
 import { handleDevLogin } from "./routes/devAuth";
 import { isAuthenticated } from "./middleware/auth";
+
+const FileStore = sessionFileStore(session);
 
 export function createServer() {
   const app = express();
@@ -14,6 +17,9 @@ export function createServer() {
 
   app.use(
     session({
+      store: new FileStore({
+        path: process.env.SESSION_DB_PATH || "/tmp/sessions",
+      }),
       secret: process.env.SESSION_SECRET || "secret",
       resave: false,
       saveUninitialized: false,
