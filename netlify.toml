@@ -4,7 +4,7 @@
   publish = "dist/spa"
 
 [functions]
-  external_node_modules = ["express", "sqlite3", "connect-sqlite3", "jsonwebtoken", "cookie-parser", "serverless-http"]
+  # Bundle all dependencies into the function so runtime doesn't error with missing modules
   node_bundler = "esbuild"
 
 # Proxy /api/* to Netlify function named "api"
