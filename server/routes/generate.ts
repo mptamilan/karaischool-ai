@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import type { GenerateRequest, GenerateResponse } from "@shared/api";
 import jwt from "jsonwebtoken";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // In-memory rate limiting per user/day (not persistent)
 const rateMap = new Map<string, { day: string; count: number }>();
@@ -9,6 +10,20 @@ const MAX_PER_DAY = Number(process.env.MAX_DAILY_REQUESTS || "20");
 function getUtcDayKey() {
   const now = new Date();
   return now.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+// Initialize Gemini AI
+let genAI: GoogleGenerativeAI | null = null;
+
+function getGeminiClient() {
+  const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GOOGLE_GEMINI_API_KEY not configured");
+  }
+  if (!genAI) {
+    genAI = new GoogleGenerativeAI(apiKey);
+  }
+  return genAI;
 }
 
 export const handleGenerate: RequestHandler = async (req, res) => {
@@ -55,46 +70,65 @@ export const handleGenerate: RequestHandler = async (req, res) => {
         .json({ error: "Invalid request: 'prompt' is required." });
     }
 
-    // Proxy to external AI server (your Render-hosted Gemini service)
-    const target =
-      process.env.SCHOOLAI_API_URL ||
-      process.env.VITE_AI_API_URL ||
-      "https://schoolai-server.onrender.com";
-    const url = `${target.replace(/\/$/, "")}/api/generate`;
+    // Call Gemini AI directly
+    try {
+      const gemini = getGeminiClient();
+      const modelName = process.env.GEMINI_MODEL || "gemini-2.0-flash-exp";
+      const model = gemini.getGenerativeModel({ model: modelName });
 
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt: body.prompt, userId }),
-    });
+      // Educational AI tutor system prompt
+      const systemPrompt = `You are an educational AI tutor for GHSS KARAI AI. Your role is to:
+- Help students understand concepts through clear explanations and examples
+- Break down complex topics into simple, digestible parts
+- Encourage learning through questions and interactive engagement
+- Provide accurate, curriculum-relevant information
+- Be patient, supportive, and encouraging
 
-    if (!resp.ok) {
-      const text = await resp.text();
-      console.error("External AI error:", resp.status, text);
-      return res
-        .status(502)
-        .json({ error: "AI service error. Please try again later." });
+Keep responses concise, clear, and age-appropriate for high school students.`;
+
+      const prompt = `${systemPrompt}\n\nStudent Question: ${body.prompt.trim()}`;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      if (!text || text.trim().length === 0) {
+        throw new Error("Empty response from AI");
+      }
+
+      // Increment usage count on success
+      current.count += 1;
+      rateMap.set(key, current);
+
+      const responsePayload: GenerateResponse = {
+        text: text.trim(),
+        usage: {
+          remaining: Math.max(0, MAX_PER_DAY - current.count),
+          limit: MAX_PER_DAY,
+        },
+        timestamp: new Date().toISOString(),
+      };
+
+      res.status(200).json(responsePayload);
+    } catch (aiError: any) {
+      console.error("Gemini AI error:", aiError);
+      
+      // Don't increment rate limit on AI errors
+      const errorMessage = aiError.message || "AI service error";
+      
+      // Handle specific Gemini errors
+      if (errorMessage.includes("API key")) {
+        return res.status(500).json({ 
+          error: "AI service configuration error",
+          details: "API key not configured properly"
+        });
+      }
+      
+      return res.status(502).json({ 
+        error: "AI service error. Please try again later.",
+        details: errorMessage
+      });
     }
-
-    const data = await resp.json();
-
-    // Increment usage count on success
-    current.count += 1;
-    rateMap.set(key, current);
-
-    // Normalize response shape - forward if already includes text, usage, timestamp
-    const responsePayload: GenerateResponse = {
-      text:
-        (data && (data.text || data.answer || JSON.stringify(data))) ||
-        "(No content)",
-      usage: data.usage || {
-        remaining: Math.max(0, MAX_PER_DAY - current.count),
-        limit: MAX_PER_DAY,
-      },
-      timestamp: data.timestamp || new Date().toISOString(),
-    };
-
-    res.status(200).json(responsePayload);
   } catch (err) {
     console.error("/api/generate error", err);
     res.status(500).json({ error: "Unexpected server error" });
