@@ -60,6 +60,20 @@ export const handleLogin: RequestHandler = async (req, res) => {
       picture: info.picture,
     };
 
+    // Persist user to DB (best-effort)
+    try {
+      const saved = await findOrCreateUserFromGoogle({
+        sub: info.sub,
+        name: info.name,
+        email: info.email,
+        picture: info.picture,
+      });
+      // attach DB id if available
+      if (saved && saved.id) payload['id'] = saved.id;
+    } catch (e) {
+      console.warn('Failed to persist user to DB', e);
+    }
+
     // CRITICAL: Require SESSION_SECRET in production to prevent token forgery
     const secret = process.env.SESSION_SECRET;
     if (!secret) {
