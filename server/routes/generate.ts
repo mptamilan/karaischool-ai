@@ -35,6 +35,15 @@ async function getGeminiClient() {
 }
 
 export const handleGenerate: RequestHandler = async (req, res) => {
+  // Fail early if GOOGLE_GEMINI_API_KEY is not configured
+  if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    console.error("GOOGLE_GEMINI_API_KEY not configured");
+    return res.status(500).json({
+      error: "AI service not configured on the server.",
+      details: "The GOOGLE_GEMINI_API_KEY is missing.",
+    });
+  }
+
   try {
     // Require authenticated JWT
     // Accept token from Authorization header or cookie
