@@ -7,6 +7,7 @@ import path from "path";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate } from "./routes/generate";
 import { handleLogin, handleLogout, handleMe } from "./routes/auth";
+import { handleDevLogin } from "./routes/devAuth";
 
 export function createServer() {
   const app = express();
