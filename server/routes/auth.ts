@@ -5,13 +5,10 @@ import { findOrCreateUserFromGoogle } from "../db/sqlite";
 // POST /api/auth/login { id_token }
 export const handleLogin: RequestHandler = async (req, res) => {
   try {
-    // Accept either { id_token } or Google's direct POST field { credential }
     const idToken =
       req.body?.id_token || req.body?.credential || req.body?.idToken;
-    console.debug("/api/auth/login called, id_token present:", !!idToken);
     if (!idToken) return res.status(400).json({ error: "id_token required" });
 
-    // Verify token with Google tokeninfo
     const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
     const r = await fetch(url);
     if (!r.ok) {
@@ -20,14 +17,7 @@ export const handleLogin: RequestHandler = async (req, res) => {
       return res.status(401).json({ error: "Invalid ID token", details: text });
     }
     const info = await r.json();
-    console.debug("tokeninfo result:", {
-      iss: info.iss,
-      aud: info.aud,
-      sub: info.sub,
-      email: info.email,
-    });
 
-    // CRITICAL: Verify audience matches our client ID to prevent token substitution attacks
     const expectedClientId = process.env.VITE_GOOGLE_CLIENT_ID;
     if (!expectedClientId) {
       console.error("VITE_GOOGLE_CLIENT_ID not configured");
@@ -44,7 +34,6 @@ export const handleLogin: RequestHandler = async (req, res) => {
       });
     }
 
-    // Verify issuer is Google
     if (
       info.iss !== "https://accounts.google.com" &&
       info.iss !== "accounts.google.com"
@@ -60,7 +49,6 @@ export const handleLogin: RequestHandler = async (req, res) => {
       picture: info.picture,
     };
 
-    // Persist user to DB (best-effort)
     try {
       const saved = await findOrCreateUserFromGoogle({
         sub: info.sub,
@@ -68,13 +56,11 @@ export const handleLogin: RequestHandler = async (req, res) => {
         email: info.email,
         picture: info.picture,
       });
-      // attach DB id if available
       if (saved && saved.id) payload["id"] = saved.id;
     } catch (e) {
       console.warn("Failed to persist user to DB", e);
     }
 
-    // CRITICAL: Require SESSION_SECRET in production to prevent token forgery
     const secret = process.env.SESSION_SECRET;
     if (!secret) {
       console.error("SESSION_SECRET not configured - cannot issue tokens");
@@ -95,7 +81,6 @@ export const handleLogin: RequestHandler = async (req, res) => {
       path: "/",
     });
 
-    // Return token as well so client can persist and send in Authorization header when cookie is unavailable
     res.json({ user: payload, token });
   } catch (err) {
     console.error("/api/auth/login error", err);
@@ -135,7 +120,6 @@ export const handleLogout: RequestHandler = async (req, res) => {
 // GET /api/auth/me
 export const handleMe: RequestHandler = async (req, res) => {
   try {
-    // Accept token from cookie or Authorization header
     let token = req.cookies?.ghss_token as string | undefined;
     const authHeader = (req.headers["authorization"] as string) || "";
     if (authHeader.startsWith("Bearer ")) token = authHeader.slice(7).trim();

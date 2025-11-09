@@ -28,16 +28,6 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-function decodeJwt(credential: string): any {
-  try {
-    const [, payload] = credential.split(".");
-    const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
-    return JSON.parse(json);
-  } catch {
-    return null;
-  }
-}
-
 const STORAGE_KEY = "ghss-karaiai-user";
 
 function loadGoogleSdk(): Promise<void> {
@@ -49,7 +39,7 @@ function loadGoogleSdk(): Promise<void> {
     ) {
       return resolve();
     }
-    const existing = document.querySelector("script[data-google-id]");
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
     if (existing) {
       const g = (window as any).google;
       if (g && g.accounts && g.accounts.id) return resolve();
@@ -58,7 +48,6 @@ function loadGoogleSdk(): Promise<void> {
     script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
-    script.setAttribute("data-google-id", "1");
     script.onload = () => {
       setTimeout(() => {
         if (
@@ -102,7 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [signOutLoading, setSignOutLoading] = useState(false);
   const initializedRef = useRef(false);
 
-  // Hydrate from localStorage immediately so UI shows logged-in state fast
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -111,60 +99,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
       const tok = localStorage.getItem("ghss_token");
       if (tok) setToken(tok);
-    } catch {}
+    } catch (e) {
+      console.warn("Failed to load user from local storage", e);
+    }
   }, []);
 
-  // Determine API base: prefer same-origin unless an explicit remote URL is configured
-  const rawApiBase =
-    (import.meta as any).env.VITE_AUTH_API_URL ||
-    (import.meta as any).env.VITE_API_BASE_URL ||
-    "";
-  const apiBase = (() => {
+  const apiBase = useMemo(() => {
+    const rawApiBase =
+      (import.meta as any).env.VITE_AUTH_API_URL ||
+      (import.meta as any).env.VITE_API_BASE_URL ||
+      "";
     if (!rawApiBase) return "";
     try {
       const parsed = new URL(rawApiBase);
-      // If the configured API base points to the same origin as the app, use relative paths
       if (parsed.origin === window.location.origin) return "";
-      return rawApiBase;
+      return rawApiBase.replace(/\/$/, "");
     } catch (e) {
-      return rawApiBase;
+      return rawApiBase.replace(/\/$/, "");
     }
-  })();
-
-  // Helper function to try configured API base with fallback to same-origin
-  const fetchWithFallback = useCallback(
-    async (input: string, init?: RequestInit) => {
-      const urls: string[] = [];
-      if (/^https?:\/\//i.test(input)) {
-        urls.push(input);
-        try {
-          // also try relative path on same origin
-          const rel = input.replace(/^https?:\/\/[^/]+/i, "");
-          if (rel) urls.push(rel);
-        } catch {}
-      } else {
-        urls.push(input);
-      }
-      for (const u of urls) {
-        try {
-          const r = await fetch(u, init);
-          if (r.status !== 404) return r;
-        } catch (e) {
-          // ignore and try next
-        }
-      }
-      // final attempt
-      return fetch(input, init);
-    },
-    [],
-  );
+  }, []);
 
   const handleCredential = useCallback(
     async (credential: string) => {
       setAuthLoading(true);
       setError(null);
       try {
-        const res = await fetchWithFallback(`${apiBase}/api/auth/login`, {
+        const res = await fetch(`${apiBase}/api/auth/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -172,46 +132,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         });
         const data = await res.json();
         if (!res.ok) {
-          setError(data?.error || "Login failed");
-          toast({
-            title: "Login failed",
-            description: data?.error || "Unable to sign in",
-          });
-          setAuthLoading(false);
-          return;
+          throw new Error(data?.error || "Login failed");
         }
         if (data?.user) {
           setUser(data.user);
-          try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
-          } catch {}
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.user));
         }
         if (data?.token) {
           setToken(data.token);
-          try {
-            localStorage.setItem("ghss_token", data.token);
-          } catch {}
+          localStorage.setItem("ghss_token", data.token);
         }
-        // Ensure Google does not auto-select next time
-        try {
-          (window as any).google?.accounts?.id?.disableAutoSelect?.();
-        } catch {}
+        (window as any).google?.accounts?.id?.disableAutoSelect?.();
         toast({
           title: "Signed in",
           description: `Welcome ${data?.user?.name || ""}`,
         });
       } catch (e: any) {
         console.error("handleCredential error", e);
-        setError("Login failed");
+        setError(e.message || "Login failed");
         toast({
           title: "Login error",
-          description: "Unexpected error during sign in",
+          description: e.message || "Unexpected error during sign in",
+          variant: "destructive",
         });
       } finally {
         setAuthLoading(false);
       }
     },
-    [apiBase, fetchWithFallback],
+    [apiBase],
   );
 
   useEffect(() => {
@@ -228,10 +176,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         await loadGoogleSdk();
         const g = (window as any).google;
-        if (!g || !g.accounts || !g.accounts.id) {
-          setError("Google SDK not available");
-          setInitialized(true);
-          return;
+        if (!g?.accounts?.id) {
+          throw new Error("Google SDK not available");
         }
         if (!initializedRef.current) {
           g.accounts.id.initialize({
@@ -239,16 +185,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             callback: (resp: any) => {
               if (resp?.credential) handleCredential(resp.credential);
             },
+            auto_select: false,
           });
           initializedRef.current = true;
         }
 
-        // Attempt to restore session via backend using cookie or stored token
-        try {
-          const headers: Record<string, string> = {};
-          const storedToken = localStorage.getItem("ghss_token");
-          if (storedToken) headers["Authorization"] = `Bearer ${storedToken}`;
-          const me = await fetchWithFallback(`${apiBase || ""}/api/auth/me`, {
+        const storedToken = localStorage.getItem("ghss_token");
+        if (storedToken) {
+          const headers: Record<string, string> = {
+            Authorization: `Bearer ${storedToken}`,
+          };
+          const me = await fetch(`${apiBase || ""}/api/auth/me`, {
             credentials: "include",
             headers,
           });
@@ -256,27 +203,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const j = await me.json();
             if (mounted && j?.user) {
               setUser(j.user);
-              try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
-              } catch {}
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(j.user));
             }
           }
-        } catch (err) {
-          // ignore
         }
-
-        if (mounted) setInitialized(true);
       } catch (e: any) {
         console.warn("Google init failed", e);
         setError("Failed to load Google SDK");
-        setInitialized(true);
+      } finally {
+        if (mounted) setInitialized(true);
       }
     }
     init();
     return () => {
       mounted = false;
     };
-  }, [handleCredential, apiBase, fetchWithFallback]);
+  }, [handleCredential, apiBase]);
 
   const signIn = useCallback(() => {
     const g = (window as any).google;
@@ -286,9 +228,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
     try {
       setAuthLoading(true);
-      // Use GSI prompt; official button will POST to login_uri and server sets cookie
       g.accounts.id.prompt();
-      setTimeout(() => setAuthLoading(false), 6000);
+      setTimeout(() => setAuthLoading(false), 8000); // Increased timeout
     } catch (e: any) {
       console.error("Sign in failed", e);
       setError("Sign in failed. Try again later.");
@@ -304,46 +245,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         credentials: "include",
       });
     } catch (e) {
-      // ignore
+      console.warn("Logout failed", e);
     }
-    // Clear client-side state
     setUser(null);
     setToken(null);
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem("ghss_token");
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem("ghss_token");
-    } catch {}
-    // End Google auto-select and cancel prompt
-    const g = (window as any).google;
-    try {
-      g?.accounts?.id?.disableAutoSelect && g.accounts.id.disableAutoSelect();
-      g?.accounts?.id?.cancel && g.accounts.id.cancel();
-    } catch {}
+      (window as any).google?.accounts?.id?.disableAutoSelect?.();
+      (window as any).google?.accounts?.id?.cancel?.();
+    } catch (e) {
+      console.warn("Google sign out cleanup failed", e);
+    }
     toast({ title: "Signed out", description: "You are now signed out" });
     setSignOutLoading(false);
   }, [apiBase]);
 
   const value = useMemo(
-    () => ({
-      user,
-      token,
-      initialized,
-      error,
-      authLoading,
-      signOutLoading,
-      signIn,
-      signOut,
-    }),
-    [
-      user,
-      token,
-      initialized,
-      error,
-      authLoading,
-      signOutLoading,
-      signIn,
-      signOut,
-    ],
+    () => ({ user, token, initialized, error, authLoading, signOutLoading, signIn, signOut }),
+    [user, token, initialized, error, authLoading, signOutLoading, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
