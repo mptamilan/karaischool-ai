@@ -66,13 +66,7 @@ export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
               </div>
             </div>
           ) : (
-            <button
-              onClick={signIn}
-              className="btn-primary w-full"
-              disabled={!!authLoading}
-            >
-              {authLoading ? "Signing in..." : "Sign in with Google"}
-            </button>
+            <div className="text-xs text-slate-600">Please sign in using the "Sign in with Google" button in the header.</div>
           )}
         </div>
       </div>
