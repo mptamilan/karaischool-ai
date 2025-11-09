@@ -1,6 +1,7 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import serverless from "serverless-http";
 import { handleLogin, handleMe, handleLogout, handleAuthDebug } from "./routes/auth";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate } from "./routes/generate";
@@ -46,4 +47,4 @@ export function createServer() {
 
 // Create and export the app for Vercel
 const app = createServer();
-export default app;
+export default serverless(app);
