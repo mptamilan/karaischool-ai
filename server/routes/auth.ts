@@ -37,7 +37,8 @@ export const handleLogin: RequestHandler = async (req, res) => {
       path: "/",
     });
 
-    res.json({ user: payload });
+    // Return token as well so client can persist and send in Authorization header when cookie is unavailable
+    res.json({ user: payload, token });
   } catch (err) {
     console.error("/api/auth/login error", err);
     res.status(500).json({ error: "Server error" });
