@@ -4,15 +4,15 @@ A complete educational AI tutor website built with React + TypeScript + Vite, Ta
 
 ## 🚀 Quick Deploy to Netlify
 
-**All deployment issues have been fixed!** See `NETLIFY_SETUP.md` and `FIXES_APPLIED.md` for details.
+**All deployment issues have been fixed! Gemini AI is now integrated directly - no separate backend needed!**
+
+See `NETLIFY_SETUP.md` and `FIXES_APPLIED.md` for details.
 
 Required Netlify environment variables:
 - `VITE_GOOGLE_CLIENT_ID` - Google OAuth Client ID
 - `SESSION_SECRET` - Secret for JWT signing (generate random 32+ char string)
+- `GOOGLE_GEMINI_API_KEY` - Your Gemini API key
 - `NODE_ENV=production`
-
-Optional:
-- `SCHOOLAI_API_URL` - Your AI backend URL (defaults to https://schoolai-server.onrender.com)
 
 ## Tech Stack
 

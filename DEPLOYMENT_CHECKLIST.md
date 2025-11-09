@@ -42,10 +42,10 @@ Add these variables one by one:
 
 | Variable Name | Value | Example |
 |--------------|-------|---------|
-| `VITE_GOOGLE_CLIENT_ID` | Your Google Client ID | `123456789-abcd.apps.googleusercontent.com` |
+| `VITE_GOOGLE_CLIENT_ID` | Your Google OAuth Client ID | `123456789-abcd.apps.googleusercontent.com` |
 | `SESSION_SECRET` | Random 32+ char string | `a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0` |
+| `GOOGLE_GEMINI_API_KEY` | Your Gemini API key | `AIza...your_api_key_here` |
 | `NODE_ENV` | `production` | `production` |
-| `SCHOOLAI_API_URL` | Your AI backend URL | `https://your-ai-backend.onrender.com` |
 
 ### Step 3: Deploy
 1. Click **"Deploy site"**

@@ -18,20 +18,27 @@ Set these in your Netlify dashboard under **Site settings → Environment variab
    - Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
    - **IMPORTANT**: Keep this secret and never commit to Git
 
-3. **NODE_ENV**
+3. **GOOGLE_GEMINI_API_KEY**
+   - Your Google Gemini API key for AI tutoring functionality
+   - Get from: https://makersuite.google.com/app/apikey or https://aistudio.google.com/app/apikey
+   - **CRITICAL**: This is required for the AI tutor to work
+   - **IMPORTANT**: Keep this secret and never commit to Git
+
+4. **NODE_ENV**
    - Set to: `production`
 
 ### Optional Variables
 
-4. **SCHOOLAI_API_URL** or **VITE_AI_API_URL**
-   - URL of your external AI service (defaults to `https://schoolai-server.onrender.com`)
-   - Example: `https://your-ai-backend.onrender.com`
+5. **GEMINI_MODEL**
+   - Gemini model to use (defaults to `gemini-2.0-flash-exp`)
+   - Other options: `gemini-1.5-pro`, `gemini-1.5-flash`, etc.
+   - Example: `gemini-1.5-pro`
 
-5. **MAX_DAILY_REQUESTS**
+6. **MAX_DAILY_REQUESTS**
    - Daily request limit per user (defaults to `20`)
    - Example: `50`
 
-6. **ALLOWED_ORIGIN**
+7. **ALLOWED_ORIGIN**
    - For CORS (defaults to wildcard `*` which works for most cases)
    - If needed, set to your Netlify URL: `https://your-site.netlify.app`
 
@@ -48,6 +55,15 @@ Set these in your Netlify dashboard under **Site settings → Environment variab
 7. Add Authorized redirect URIs:
    - `https://your-site.netlify.app`
 8. Copy the Client ID and set as `VITE_GOOGLE_CLIENT_ID` in Netlify
+
+## Google Gemini API Setup
+
+1. Go to [Google AI Studio](https://aistudio.google.com/app/apikey) or [MakerSuite](https://makersuite.google.com/app/apikey)
+2. Click **"Get API Key"** or **"Create API Key"**
+3. Create a new API key (or use existing one)
+4. Copy the API key
+5. Set as `GOOGLE_GEMINI_API_KEY` in Netlify environment variables
+6. **NEVER** commit this key to your repository
 
 ## Build Configuration
 

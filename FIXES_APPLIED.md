@@ -87,7 +87,32 @@ Applied to:
 
 **CRITICAL**: `SESSION_SECRET` MUST be set in Netlify environment variables AND in local .env for development.
 
-### 7. **Missing Environment Variable Documentation** ✅
+### 7. **Integrated Gemini AI Directly (No External Backend)** ✅
+**Problem**: The application was configured to proxy AI requests to an external backend server (`https://schoolai-server.onrender.com`), adding complexity and requiring a separate deployment.
+
+**Fix**: Integrated Google Gemini AI directly into the Express backend:
+```typescript
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+// Initialize Gemini client
+const gemini = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+const model = gemini.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+// Generate response
+const result = await model.generateContent(prompt);
+const text = result.response.text();
+```
+
+**Benefits**:
+- ✅ Single project deployment - no separate backend needed
+- ✅ Simplified configuration - just add Gemini API key to Netlify
+- ✅ Better error handling and system prompts
+- ✅ Educational AI tutor system prompt built-in
+- ✅ Faster responses (no proxy overhead)
+
+**CRITICAL**: `GOOGLE_GEMINI_API_KEY` MUST be set in Netlify environment variables.
+
+### 8. **Missing Environment Variable Documentation** ✅
 **Problem**: No clear documentation on required Netlify environment variables.
 
 **Fix**: Created comprehensive `NETLIFY_SETUP.md` with:
@@ -128,10 +153,11 @@ Set these in your Netlify dashboard before deploying:
 ### Critical (Required)
 - `VITE_GOOGLE_CLIENT_ID` - Your Google OAuth Client ID
 - `SESSION_SECRET` - Random secret for JWT signing (32+ chars)
+- `GOOGLE_GEMINI_API_KEY` - Your Gemini API key for AI tutoring
 - `NODE_ENV` - Set to `production`
 
 ### Optional
-- `SCHOOLAI_API_URL` or `VITE_AI_API_URL` - Your AI backend URL (defaults to https://schoolai-server.onrender.com)
+- `GEMINI_MODEL` - Gemini model to use (defaults to `gemini-2.0-flash-exp`)
 - `MAX_DAILY_REQUESTS` - Daily limit per user (defaults to 20)
 - `ALLOWED_ORIGIN` - For CORS (defaults to `*`)
 
@@ -162,8 +188,15 @@ Set these in your Netlify dashboard before deploying:
 1. Client sends prompt to `/api/generate`
 2. Server validates JWT authentication
 3. Server checks rate limit (in-memory, resets on cold start)
-4. Server proxies request to external AI service (configurable via env var)
-5. Server returns normalized response with usage data
+4. Server calls Google Gemini AI directly with educational system prompt
+5. Gemini generates response optimized for high school students
+6. Server returns response with usage data
+
+**Educational System Prompt**: The AI tutor is configured with a system prompt that:
+- Helps students understand concepts through clear explanations
+- Breaks down complex topics into simple parts
+- Encourages interactive learning
+- Provides age-appropriate responses
 
 **Note**: Rate limiting is currently in-memory and will reset when Netlify functions cold-start. For persistent rate limiting, consider using a database or Netlify KV store.
 
