@@ -55,7 +55,12 @@ export default function TutorPage() {
 
   const send = async (text: string) => {
     if (!user) {
+      // Prompt sign in and show toast
       signIn();
+      try {
+        const { toast } = await import("@/hooks/use-toast");
+        toast({ title: "Sign in required", description: "Please sign in with Google to use the AI tutor." });
+      } catch {}
       return;
     }
     if (usage.remaining <= 0) {
