@@ -15,12 +15,23 @@ export function createServer() {
   // CORS
   const allowedOrigin =
     process.env.ALLOWED_ORIGIN || process.env.NETLIFY_SITE_URL || "*";
-  app.use(
-    cors({
-      origin: allowedOrigin === "*" ? true : [allowedOrigin],
-      credentials: true,
-    }),
-  );
+
+  // If the allowed origin is a wildcard, echo the request origin so that
+  // Access-Control-Allow-Origin will be set to the actual caller and
+  // cookies (credentials) will work. Otherwise use the configured origin.
+  const corsOptions =
+    allowedOrigin === "*"
+      ? {
+          origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean | string) => void) => {
+            // allow requests with no origin (mobile apps, curl)
+            if (!origin) return callback(null, true);
+            return callback(null, origin);
+          },
+          credentials: true,
+        }
+      : { origin: allowedOrigin === "" ? true : [allowedOrigin], credentials: true };
+
+  app.use(cors(corsOptions));
 
   // Trust proxy when behind a proxy (Netlify functions)
   if (process.env.TRUST_PROXY !== "false") {
