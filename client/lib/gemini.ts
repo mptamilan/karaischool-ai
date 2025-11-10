@@ -97,7 +97,7 @@ async function fetchWithRetry(
 export async function chatWithGemini(
   message: string,
   history: ChatMessage[] = [],
-  model: string = 'gemini-1.5-pro-latest'
+  model: string = 'gemini-2.0-flash-exp'
 ): Promise<string> {
   if (!message || message.trim().length === 0) {
     throw new GeminiApiError('Message cannot be empty', 400, false);
@@ -160,7 +160,7 @@ export async function chatWithGemini(
 // Simple content generation
 export async function generateContent(
   prompt: string,
-  model: string = 'gemini-1.5-pro-latest'
+  model: string = 'gemini-2.0-flash-exp'
 ): Promise<string> {
   if (!prompt || prompt.trim().length === 0) {
     throw new GeminiApiError('Prompt cannot be empty', 400, false);
@@ -224,7 +224,7 @@ export async function streamContent(
   prompt: string,
   onChunk: (text: string) => void,
   onError?: (error: GeminiApiError) => void,
-  model: string = 'gemini-1.5-pro-latest'
+  model: string = 'gemini-2.0-flash-exp'
 ): Promise<void> {
   if (!prompt || prompt.trim().length === 0) {
     const error = new GeminiApiError('Prompt cannot be empty', 400, false);
@@ -351,5 +351,4 @@ export async function checkApiHealth(): Promise<boolean> {
 // Get API base URL (useful for debugging)
 export function getApiUrl(): string {
   return API_BASE_URL;
-}
-""
+};
