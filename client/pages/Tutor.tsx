@@ -4,7 +4,7 @@ import ChatMessage from "@/components/chat/ChatMessage";
 import LoadingDots from "@/components/chat/LoadingDots";
 import Sidebar from "@/components/layout/Sidebar";
 import { AlertTriangle, SendHorizonal, Sparkles } from "lucide-react";
-import { getGenerativeModel } from "@/lib/gemini";
+import { chatWithGemini } from "@/lib/gemini";
 
 interface Message {
   role: "user" | "assistant";
@@ -66,19 +66,14 @@ export default function TutorPage() {
     setLoading(true);
     setError(null);
     try {
-      const model = getGenerativeModel();
-      const data = await model.generateContent(text);
-
-      if (data.usage) {
-        setUsage(data.usage);
-      }
+      const response = await chatWithGemini(text, messages.map(m => ({role: m.role === 'assistant' ? 'model' : 'user', parts: [{text: m.content}] })));
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: data.text,
-          timestamp: data.timestamp,
+          content: response,
+          timestamp: new Date().toISOString(),
         },
       ]);
     } catch (e: any) {
