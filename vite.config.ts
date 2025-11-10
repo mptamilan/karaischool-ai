@@ -10,19 +10,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve("./client"),
-      "@shared": path.resolve("./shared"),
     },
   },
   build: {
     outDir: "dist",
-  },
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '/api'),
-      },
-    },
   },
 });

@@ -3,8 +3,8 @@ import { useAuth } from "@/hooks/auth";
 import ChatMessage from "@/components/chat/ChatMessage";
 import LoadingDots from "@/components/chat/LoadingDots";
 import Sidebar from "@/components/layout/Sidebar";
-import type { GenerateResponse } from "@shared/api";
 import { AlertTriangle, SendHorizonal, Sparkles } from "lucide-react";
+import { getGenerativeModel } from "@/lib/gemini";
 
 interface Message {
   role: "user" | "assistant";
@@ -20,8 +20,7 @@ const examples = [
 ];
 
 export default function TutorPage() {
-  const { user, signIn, token } = useAuth();
-  // Replaced useDailyUsage with local state updated by server
+  const { user, signIn } = useAuth();
   const [usage, setUsage] = useState({ limit: 20, remaining: 20 });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
@@ -38,24 +37,11 @@ export default function TutorPage() {
 
   const canSend = useMemo(
     () => !loading && input.trim().length > 0 && usage.remaining > 0 && !!user,
-    [loading, input, usage.remaining, user],
+    [loading, input, usage.remaining, user]
   );
-
-  const rawApiBase = (import.meta as any).env.VITE_API_BASE_URL || "";
-  const apiBase = (() => {
-    if (!rawApiBase) return "";
-    try {
-      const parsed = new URL(rawApiBase);
-      if (parsed.origin === window.location.origin) return "";
-      return rawApiBase;
-    } catch (e) {
-      return rawApiBase;
-    }
-  })(); // default to same origin (our server)
 
   const send = async (text: string) => {
     if (!user) {
-      // Prompt sign in and show toast
       signIn();
       try {
         const { toast } = await import("@/hooks/use-toast");
@@ -80,29 +66,20 @@ export default function TutorPage() {
     setLoading(true);
     setError(null);
     try {
-      const headers: Record<string, string> = {
-        "Content-Type": "application/json",
-      };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-      const resp = await fetch(`${apiBase}/api/generate`, {
-        method: "POST",
-        headers,
-        credentials: "include",
-        body: JSON.stringify({ prompt: text }),
-      });
-      const data = (await resp.json()) as GenerateResponse;
-      if (!resp.ok || (data as any).error) {
-        throw new Error((data as any).error || "Request failed");
-      }
+      const model = getGenerativeModel();
+      const data = await model.generateContent(text);
 
-      // Update usage from server response
       if (data.usage) {
         setUsage(data.usage);
       }
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.text, timestamp: data.timestamp },
+        {
+          role: "assistant",
+          content: data.text,
+          timestamp: data.timestamp,
+        },
       ]);
     } catch (e: any) {
       const msg = e.message || "Something went wrong. Please try again.";
