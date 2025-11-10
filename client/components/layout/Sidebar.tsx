@@ -1,14 +1,8 @@
 import { useAuth } from "@/hooks/auth";
-import { useDailyUsage } from "@/hooks/use-usage";
 import { BarChart3, Settings, Plus } from "lucide-react";
 
 export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
-  const { user, signIn, signOut, authLoading, signOutLoading } = useAuth();
-  const usage = useDailyUsage(user?.email ?? null);
-
-  const percent = Math.round(
-    ((usage.limit - usage.remaining) / usage.limit) * 100,
-  );
+  const { user } = useAuth();
 
   return (
     <aside className="w-full md:w-72 shrink-0 p-4 md:p-6">
@@ -23,13 +17,7 @@ export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
             Usage
           </div>
           <div className="text-xs text-slate-600 mb-2">
-            Daily limit: {usage.limit} · Remaining: {usage.remaining}
-          </div>
-          <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
-              style={{ width: `${percent}%` }}
-            />
+            Daily usage is now tracked on the main chat screen.
           </div>
         </div>
         <div>
@@ -57,11 +45,11 @@ export default function Sidebar({ onNewChat }: { onNewChat: () => void }) {
               </div>
               <div>
                 <button
-                  onClick={() => signOut()}
+                  onClick={() => {}}
                   className="btn-ghost text-xs"
-                  disabled={!!signOutLoading}
+                  disabled={true}
                 >
-                  {signOutLoading ? "Signing out..." : "Logout"}
+                  Logout
                 </button>
               </div>
             </div>

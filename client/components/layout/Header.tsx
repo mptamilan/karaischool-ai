@@ -1,11 +1,18 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/auth";
-import { LogIn, LogOut } from "lucide-react";
-import LoadingDots from "@/components/chat/LoadingDots";
-import GoogleLogin from "@/components/auth/GoogleLogin";
+import { auth } from "@/lib/firebase";
+import { Button } from "@/components/ui/button";
 
 export default function Header() {
-  const { user, signOut, signOutLoading } = useAuth();
+  const { user, loading } = useAuth();
+
+  const handleSignOut = async () => {
+    try {
+      await auth.signOut();
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b bg-white/70 backdrop-blur">
@@ -61,81 +68,19 @@ export default function Header() {
           </NavLink>
         </nav>
         <div className="flex items-center gap-3">
-          {user ? (
+          {loading ? (
+            <div>Loading...</div>
+          ) : user ? (
             <>
-              <div className="hidden sm:flex items-center gap-2 bg-slate-100 rounded-full pl-1 pr-3 py-1">
-                {user.picture ? (
-                  <img
-                    src={user.picture}
-                    alt={user.name}
-                    className="h-7 w-7 rounded-full"
-                  />
-                ) : (
-                  <div className="h-7 w-7 rounded-full bg-primary/10" />
-                )}
-                <div className="text-sm">
-                  <div className="font-semibold leading-none">{user.name}</div>
-                  <div className="text-slate-500 text-xs">{user.email}</div>
-                </div>
-              </div>
-              <button
-                onClick={signOut}
-                className="btn-primary"
-                disabled={!!signOutLoading}
-              >
-                {signOutLoading ? (
-                  <>
-                    <LoadingDots />
-                    <span className="ml-2">Signing out...</span>
-                  </>
-                ) : (
-                  <>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Logout
-                  </>
-                )}
-              </button>
+              <span className="hidden sm:inline">{user.displayName}</span>
+              <Button onClick={handleSignOut}>Logout</Button>
             </>
           ) : (
-            <>
-              <GoogleLogin />
-            </>
+            <Button asChild>
+              <Link to="/login">Login</Link>
+            </Button>
           )}
         </div>
-      </div>
-      <div className="md:hidden border-t px-4 py-2 flex gap-6 text-sm">
-        <NavLink
-          to="/"
-          className={({ isActive }) =>
-            isActive ? "text-primary font-semibold" : "text-slate-600"
-          }
-        >
-          Home
-        </NavLink>
-        <NavLink
-          to="/tutor"
-          className={({ isActive }) =>
-            isActive ? "text-primary font-semibold" : "text-slate-600"
-          }
-        >
-          Tutor
-        </NavLink>
-        <NavLink
-          to="/about"
-          className={({ isActive }) =>
-            isActive ? "text-primary font-semibold" : "text-slate-600"
-          }
-        >
-          About
-        </NavLink>
-        <NavLink
-          to="/contact"
-          className={({ isActive }) =>
-            isActive ? "text-primary font-semibold" : "text-slate-600"
-          }
-        >
-          Contact
-        </NavLink>
       </div>
     </header>
   );

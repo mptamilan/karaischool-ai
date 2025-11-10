@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@/hooks/auth";
-import { useDailyUsage } from "@/hooks/use-usage";
 import ChatMessage from "@/components/chat/ChatMessage";
 import LoadingDots from "@/components/chat/LoadingDots";
 import Sidebar from "@/components/layout/Sidebar";
@@ -22,7 +21,8 @@ const examples = [
 
 export default function TutorPage() {
   const { user, signIn, token } = useAuth();
-  const usage = useDailyUsage(user?.email ?? null);
+  // Replaced useDailyUsage with local state updated by server
+  const [usage, setUsage] = useState({ limit: 20, remaining: 20 });
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -94,7 +94,12 @@ export default function TutorPage() {
       if (!resp.ok || (data as any).error) {
         throw new Error((data as any).error || "Request failed");
       }
-      usage.increment();
+
+      // Update usage from server response
+      if (data.usage) {
+        setUsage(data.usage);
+      }
+
       setMessages((prev) => [
         ...prev,
         { role: "assistant", content: data.text, timestamp: data.timestamp },
