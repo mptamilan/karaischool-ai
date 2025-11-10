@@ -7,6 +7,15 @@ export default defineConfig({
   plugins: [
     react(),
   ],
+  server: {
+    proxy: {
+      "/api": {
+        target: "https://karaischoolai-server.vercel.app",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve("./client"),
